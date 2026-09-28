@@ -1,0 +1,26 @@
+// src/server.ts
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import { connectDB } from "./db.js";
+import userRoutes from "./routes/routes.js";
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use("/api/semantic/embeddings/extended", userRoutes);
+
+const PORT = process.env.PORT || 5000;
+
+connectDB()
+  .then(() => {
+    app.listen(PORT, async () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Database connection failed:", error);
+    process.exit(1);
+  });
