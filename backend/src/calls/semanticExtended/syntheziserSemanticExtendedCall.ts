@@ -23,7 +23,6 @@ export const syntheziserSemanticExtendedCall = async (state: any) => {
   console.log(mergedRanges);
 
   const extendedChunks = await extendChunksWithMoreContext(mergedRanges);
-  console.log("Extended Chunks: " + JSON.stringify(extendedChunks));
 
   const systemMessage: string = queryExtenderPrompt(extendedChunks);
   const response = await defaultChatModel.invoke([
