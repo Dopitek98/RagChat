@@ -8,7 +8,7 @@ export const DATABASE_NAME = "Embedding";
 export const COLLECTION_NAME = "Document2";
 export const DEFAULT_CHUNK_EXTENSION = 30; // Number of lines to extend the context by
 export const MONGO_URI =
-  "mongodb://admin:admin@mongodb-atlas:27017/admin?directConnection=true";
+  "mongodb://admin:admin@localhost:27017/admin?directConnection=true";
 
 export const client = new MongoClient(MONGO_URI);
 
@@ -68,7 +68,7 @@ export const vectorStore = new MongoDBAtlasVectorSearch(defaultEmbeddingModel, {
 
 export async function getAllDocuments() {
   const client = new MongoClient(
-    "mongodb://admin:admin@mongodb-atlas:27017/admin?directConnection=true",
+    "mongodb://admin:admin@localhost:27017/admin?directConnection=true",
   );
 
   try {
