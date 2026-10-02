@@ -1,18 +1,17 @@
-import "./UserInput.css";
+
 function UserInput({
   handleTextChange,
 }: {
   handleTextChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <div>
-      <input
-        className="input-box"
-        type="text"
-        onChange={handleTextChange}
-        placeholder="Enter question to llm"
-      />
-    </div>
+    <input
+      className="min-h-12 w-full bg-transparent px-4 py-3 text-sm text-ink outline-none placeholder:text-slate-400"
+      type="text"
+      onChange={handleTextChange}
+      placeholder="Message your RAG assistant..."
+      aria-label="Message your RAG assistant"
+    />
   );
 }
 
