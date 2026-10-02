@@ -3,7 +3,8 @@ import { QueriesStructuredOutput } from "../schema/messagesSchema.js";
 
 const DEFAULT_MODEL = "qwen3.5:4b";
 const DEFAULT_TEMPERATURE = 0;
-const DEFAULT_BASE_URL = "http://localhost:11434";
+const DEFAULT_BASE_URL =
+  process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
 const DEFAULT_DIMENSIONS = 1024;
 const DEFAULT_EMBEDDING_MODEL = "qwen3-embedding:latest";
 

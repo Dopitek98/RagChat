@@ -1,5 +1,8 @@
 // src/server.ts
-import "dotenv/config";
+import dotenv from "dotenv";
+
+const envFile = process.env.NODE_ENV === "docker" ? ".env.docker" : ".env.local";
+dotenv.config({ path: envFile });
 import express from "express";
 import cors from "cors";
 import { connectDB } from "./db.js";
