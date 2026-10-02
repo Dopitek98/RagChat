@@ -1,5 +1,6 @@
 import type { ContentResult, Result } from "../types/types.js";
 import {
+  client,
   extendGivenContext,
   vectorStore,
 } from "../mongo/mongoClientFactory.js";
@@ -9,6 +10,7 @@ import bm25 from "wink-bm25-text-search";
 import { ObjectId } from "mongodb";
 
 export const prepareDocumentBySimilaritySearch = async (state: any) => {
+  await client.connect();
   const uploads: ContentResult[] = [];
   for (const query of state.searchQueries) {
     const tempUploads: ContentResult[] = [];
@@ -32,6 +34,7 @@ export const prepareDocumentBySimilaritySearch = async (state: any) => {
 
     uploads.push({ content: topScoredResponse.content });
   }
+  await client.close();
   return uploads;
 };
 
@@ -120,13 +123,11 @@ export async function bm25Search(query: string, documents: any[]) {
     },
   ]);
 
-
   for (const doc of documents) {
     engine.addDoc({ text: doc.text }, doc._id);
   }
 
   engine.consolidate();
-
 
   const results = engine.search(query);
 
