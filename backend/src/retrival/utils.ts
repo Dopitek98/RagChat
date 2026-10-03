@@ -1,32 +1,31 @@
-import type { ContentResult, Result } from "../types/types.js";
+﻿import type { ContentResult, Result } from "../types/types.js";
 import {
-  client,
   extendGivenContext,
-  vectorStore,
+  similaritySearchWithScore,
 } from "../mongo/mongoClientFactory.js";
 import winkNLP from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import bm25 from "wink-bm25-text-search";
-import { ObjectId } from "mongodb";
 
 export const prepareDocumentBySimilaritySearch = async (state: any) => {
-  await client.connect();
   const uploads: ContentResult[] = [];
   for (const query of state.searchQueries) {
     const tempUploads: ContentResult[] = [];
-    const retrievedDocs = await vectorStore.similaritySearchWithScore(query, 4);
+    const retrievedDocs = await similaritySearchWithScore(query, 4);
 
-    retrievedDocs.forEach(([doc, score]: [any, number]) => {
+    retrievedDocs.forEach((doc: any) => {
       tempUploads.push({
         content: {
-          source: doc.metadata.source ?? "unknown",
-          pageContent: doc.pageContent,
-          score: score,
-          fromLine: doc.metadata.loc.lines.from,
-          toLine: doc.metadata.loc.lines.to,
+          source: doc.source ?? "unknown",
+          pageContent: doc.text,
+          score: Number(doc.score),
+          fromLine: doc.line_from,
+          toLine: doc.line_to,
         },
       });
     });
+
+    if (tempUploads.length === 0) continue;
 
     const topScoredResponse = tempUploads.reduce((max, current) =>
       current.content.score > max.content.score ? current : max,
@@ -34,7 +33,6 @@ export const prepareDocumentBySimilaritySearch = async (state: any) => {
 
     uploads.push({ content: topScoredResponse.content });
   }
-  await client.close();
   return uploads;
 };
 
@@ -124,23 +122,22 @@ export async function bm25Search(query: string, documents: any[]) {
   ]);
 
   for (const doc of documents) {
-    engine.addDoc({ text: doc.text }, doc._id);
+    engine.addDoc({ text: doc.text }, doc.id);
   }
 
   engine.consolidate();
 
   const results = engine.search(query);
 
-  const resultDoc = [];
+  const resultDoc: any[] = [];
   for (let i = 0; i < results.length; i++) {
-    const docToAdd = documents.find((el) =>
-      el._id.equals(new ObjectId(results[i][0])),
-    );
+    const docToAdd = documents.find((el) => el.id === Number(results[i][0]));
     if (docToAdd) {
       docToAdd.score = results[i][1];
     }
     resultDoc.push(docToAdd);
   }
 
-  return resultDoc;
+  return resultDoc.filter(Boolean);
 }
+

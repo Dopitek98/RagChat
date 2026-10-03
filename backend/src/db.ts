@@ -1,22 +1,18 @@
-import { MongoClient, Db } from "mongodb";
-import { DATABASE_NAME, MONGO_URI } from "./mongo/mongoClientFactory.js";
+import pg from "pg";
 
-const client = new MongoClient(MONGO_URI);
+const { Pool } = pg;
 
-let db: Db;
+export const pool = new Pool({
+  connectionString:
+    process.env.DATABASE_URL ??
+    "postgresql://admin:admin@localhost:5432/embedding",
+});
 
 export async function connectDB() {
-  await client.connect();
-
-  db = client.db(DATABASE_NAME);
-
-  console.log("MongoDB connected");
+  await pool.query("SELECT 1");
+  console.log("PostgreSQL connected");
 }
 
-export function getDB(): Db {
-  if (!db) {
-    throw new Error("Database not initialized");
-  }
-
-  return db;
+export async function closeDB() {
+  await pool.end();
 }

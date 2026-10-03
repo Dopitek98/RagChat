@@ -16,10 +16,10 @@ export const syntheziserBm25Call = async (state: any) => {
       tempUploads.push({
         pageContent: el.text,
         score: el.score,
-        id: el._id,
+        id: el.id,
         source: el.source,
-        fromLine: el.FromLine,
-        toLine: el.ToLine,
+        fromLine: el.line_from,
+        toLine: el.line_to,
       });
     });
   }

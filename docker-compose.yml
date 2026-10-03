@@ -1,15 +1,18 @@
 services:
-  mongodb-atlas:
-    image: mongodb/mongodb-atlas-local:latest
-    container_name: mongodb-atlas
+  postgres:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    container_name: ragchat-postgres
     restart: unless-stopped
     environment:
-      MONGODB_INITDB_ROOT_USERNAME: admin
-      MONGODB_INITDB_ROOT_PASSWORD: admin
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: embedding
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongodb_data:/data/db
+      - postgres_data:/var/lib/postgresql/data
 
   vite-app-backend:
     build:
@@ -22,7 +25,7 @@ services:
       - ./backend/.env.docker
     restart: unless-stopped
     depends_on:
-      - mongodb-atlas
+      - postgres
 
   vite-app-client:
     build:
@@ -58,5 +61,5 @@ services:
       wait"
 
 volumes:
-  mongodb_data:
+  postgres_data:
   ollama_data:

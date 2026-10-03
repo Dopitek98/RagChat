@@ -1,15 +1,18 @@
 services:
-  mongodb:
-    image: mongodb/mongodb-atlas-local:latest
-    container_name: mongodb
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ragchat-postgres
     restart: unless-stopped
     environment:
-      MONGODB_INITDB_ROOT_USERNAME: admin
-      MONGODB_INITDB_ROOT_PASSWORD: admin
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: embedding
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongodb_data:/data/db
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  mongodb_data:
+  postgres_data:

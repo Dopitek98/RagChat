@@ -1,6 +1,4 @@
-import { ObjectId } from "mongodb";
-
-export type ContentResult = {
+﻿export type ContentResult = {
   content: {
     source: string;
     pageContent: string;
@@ -19,7 +17,7 @@ export type Result = {
 };
 
 export type ResultBm25 = {
-  id: ObjectId;
+  id: number;
   source: string;
   pageContent: string;
   score: number;
@@ -29,18 +27,6 @@ export type ResultBm25 = {
 
 export type LineRange = {
   source: string;
-  FromLine: number;
-  ToLine: number;
+  fromLine: number;
+  toLine: number;
 };
-
-export interface MyDocument extends Document {
-  text: string;
-  embedding: number[];
-  source: string;
-  loc: {
-    lines: {
-      from: number;
-      to: number;
-    };
-  };
-}
