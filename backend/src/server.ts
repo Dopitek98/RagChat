@@ -1,19 +1,20 @@
 // src/server.ts
 import dotenv from "dotenv";
 
-const envFile = process.env.NODE_ENV === "docker" ? ".env.docker" : ".env.local";
+const envFile =
+  process.env.NODE_ENV === "docker" ? ".env.docker" : ".env.local";
 dotenv.config({ path: envFile });
 import express from "express";
 import cors from "cors";
 import { connectDB } from "./db.js";
-import userRoutes from "./routes/routes.js";
+import routes from "./routes/routes.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/semantic/embeddings/extended", userRoutes);
+app.use("/api", routes);
 
 const PORT = process.env.PORT || 5000;
 

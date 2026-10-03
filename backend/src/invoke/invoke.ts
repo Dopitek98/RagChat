@@ -3,6 +3,7 @@ import { semanticExtendedAgent } from "../stateGraphs/semanticExtendedGraph.js";
 import { bm25Graph } from "../stateGraphs/bm25Graph.js";
 import { StateGraph } from "@langchain/langgraph";
 import { bm25ExtendedGraph } from "../stateGraphs/bm25ExtendedGraph.js";
+import { persistQueryResult } from "../mongo/mongoClientFactory.js";
 
 //@ts-ignore
 const graphMap = new Map<string, StateGraph>();
@@ -22,6 +23,15 @@ export const sendAndReceiveMessage = async (
   const result = await graph.invoke({
     messages: [new HumanMessage(userQuery)],
   });
+
+  await persistQueryResult(
+    JSON.stringify(result.messages[1].contentBlocks[1]?.text || "no response"),
+    JSON.stringify(
+      result.messages[1].contentBlocks[0]?.reasoning || "no response",
+    ),
+    userQuery,
+    searchType,
+  );
 
   return [
     JSON.stringify(

@@ -1,4 +1,4 @@
-import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
+﻿import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { Collection, MongoClient } from "mongodb";
 import { defaultEmbeddingModel } from "../models/models.js";
 import { MyDocument } from "../types/types.js";
@@ -6,6 +6,7 @@ import { MyDocument } from "../types/types.js";
 export const DATABASE_NAME = "Embedding";
 //export const COLLECTION_NAME = "Document";
 export const COLLECTION_NAME = "Document2";
+export const HISTORY_COLLECTION_NAME = "History";
 export const DEFAULT_CHUNK_EXTENSION = 30; // Number of lines to extend the context by
 export const MONGO_URI =
   process.env.MONGO_URI ??
@@ -91,6 +92,82 @@ export async function getAllDocuments() {
       .toArray();
 
     return documents;
+  } finally {
+    await client.close();
+  }
+}
+
+export async function persistQueryResult(
+  queryResult: string,
+  queryReasoning: string,
+  userQuery: string,
+  searchType?: string,
+) {
+  const client = new MongoClient(MONGO_URI);
+
+  try {
+    await client.connect();
+
+    const collection = client
+      .db(DATABASE_NAME)
+      .collection(HISTORY_COLLECTION_NAME);
+
+    const documents = await collection.insertOne({
+      queryResult,
+      queryReasoning,
+      userQuery,
+      searchType,
+      createdAt: new Date(),
+    });
+
+    return documents?.insertedId || "no result";
+  } finally {
+    await client.close();
+  }
+}
+
+export async function findQueryResult(
+  userQuery: string,
+  searchType: string,
+) {
+  const client = new MongoClient(MONGO_URI);
+
+  try {
+    await client.connect();
+
+    const collection = client
+      .db(DATABASE_NAME)
+      .collection(HISTORY_COLLECTION_NAME);
+
+    const documents = await collection.findOne({
+      userQuery,
+      searchType,
+    });
+
+    return documents || { message: "No result found" };
+  } finally {
+    await client.close();
+  }
+}
+
+
+export async function findHistory() {
+  const client = new MongoClient(MONGO_URI);
+
+  try {
+    await client.connect();
+
+    const collection = client
+      .db(DATABASE_NAME)
+      .collection(HISTORY_COLLECTION_NAME);
+
+    const documents = await collection
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(15)
+      .toArray();
+
+    return documents || { message: "No result found" };
   } finally {
     await client.close();
   }

@@ -1,7 +1,8 @@
 import type { NavBarProps } from "../types/types";
+import type { SearchType } from "../types/types";
 
 function NavBar({ searchType, setSearchType }: NavBarProps) {
-  const navItems = ["BM25", "BM25Extended", "SemanticExtended"];
+  const navItems: SearchType[] = ["BM25", "BM25Extended", "SemanticExtended"];
 
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/90 backdrop-blur">
