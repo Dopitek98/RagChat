@@ -23,7 +23,7 @@ function App() {
     <div className="min-h-screen bg-white text-ink">
       <NavBar searchType={searchType} setSearchType={setSearchType} />
       <HistoryTab entries={history} setLlmResponse={setLlmResponse} />
-      <main className="mx-auto flex min-h-[calc(100vh-65px)] w-full max-w-5xl flex-col px-4 sm:px-6 lg:ml-72">
+      <main className="flex min-h-[calc(100vh-65px)] w-full flex-col items-center justify-center px-4 sm:px-6">
         <Chat
           searchType={searchType}
           onQuerySubmitted={refreshHistory}

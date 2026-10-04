@@ -30,9 +30,9 @@ function Chat({
   useEffect(() => {}, [text, llmResponse]);
 
   return (
-    <section className="flex flex-1 flex-col">
-      <div className="flex-1 py-10 sm:py-16">
-        <div className="mx-auto max-w-2xl">
+    <section className="flex w-full max-w-5xl flex-1 flex-col">
+      <div className="flex-1 flex flex-col items-center justify-center py-10 sm:py-16">
+        <div className="w-full max-w-2xl">
           <div className="mb-8 text-center">
             <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
               How can I help you?
