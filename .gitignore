@@ -1,6 +1,7 @@
 # Dependencies
 backend/node_modules/
 client/node_modules/
+embedding/node_modules/
 
 # Production build
 backend/dist/
