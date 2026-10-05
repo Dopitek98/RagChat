@@ -8,6 +8,7 @@ router.post("/embeddings", async (req: any, res: any) => {
   try {
     console.log("Received query:", req.body.query);
     console.log("Received type of search:", req.body.searchType);
+    console.log("Received thread ID:", req.body.threadId);
 
     const existingResult = await findQueryResult(
       req.body.query,
@@ -22,6 +23,7 @@ router.post("/embeddings", async (req: any, res: any) => {
       const result = [
         existingResult.queryResult,
         existingResult.queryReasoning,
+        existingResult.threadId,
       ];
       return res.status(200).json(result);
     }
@@ -29,6 +31,7 @@ router.post("/embeddings", async (req: any, res: any) => {
     const result = await sendAndReceiveMessage(
       req.body.query,
       req.body.searchType,
+      req.body.threadId,
     );
 
     // console.log("Sending response:", JSON.stringify(result));
@@ -43,7 +46,6 @@ router.get("/history", async (req: any, res: any) => {
   try {
     const existingResult = await findHistory();
 
-    console.log("Sending response:", JSON.stringify(existingResult));
     res.status(200).json(existingResult);
   } catch (error) {
     console.error("Error occurred:", error);

@@ -2,6 +2,9 @@ import { StateGraph, START, END } from "@langchain/langgraph";
 import { MessagesState } from "../schema/messagesSchema.js";
 import { extendQueryCall } from "../calls/semanticExtended/extendQueryCall.js";
 import { syntheziserBm25Call } from "../calls/bm25/syntheziserbm25Call.js";
+import { createMongoDBCheckpointer } from "../retrival/LangChainUtils.js";
+
+const checkpointer = await createMongoDBCheckpointer();
 
 export const bm25Graph = new StateGraph(MessagesState)
   .addNode("extendQueryCall", extendQueryCall)
@@ -9,4 +12,4 @@ export const bm25Graph = new StateGraph(MessagesState)
   .addEdge(START, "extendQueryCall")
   .addEdge("extendQueryCall", "syntheziserCall")
   .addEdge("syntheziserCall", END)
-  .compile();
+  .compile({ checkpointer });

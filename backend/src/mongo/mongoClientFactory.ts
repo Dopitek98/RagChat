@@ -102,6 +102,7 @@ export async function persistQueryResult(
   queryReasoning: string,
   userQuery: string,
   searchType?: string,
+  threadId?: string,
 ) {
   const client = new MongoClient(MONGO_URI);
 
@@ -118,6 +119,7 @@ export async function persistQueryResult(
       userQuery,
       searchType,
       createdAt: new Date(),
+      threadId,
     });
 
     return documents?.insertedId || "no result";
@@ -126,10 +128,7 @@ export async function persistQueryResult(
   }
 }
 
-export async function findQueryResult(
-  userQuery: string,
-  searchType: string,
-) {
+export async function findQueryResult(userQuery: string, searchType: string) {
   const client = new MongoClient(MONGO_URI);
 
   try {
@@ -149,7 +148,6 @@ export async function findQueryResult(
     await client.close();
   }
 }
-
 
 export async function findHistory() {
   const client = new MongoClient(MONGO_URI);

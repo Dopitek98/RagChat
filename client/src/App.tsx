@@ -8,7 +8,11 @@ import { getHistory } from "./api/api";
 function App() {
   const [searchType, setSearchType] = useState<SearchType>("BM25");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [llmResponse, setLlmResponse] = useState<[string, string]>(["", ""]);
+  const [llmResponse, setLlmResponse] = useState<[string, string, string]>([
+    "",
+    "",
+    "",
+  ]);
 
   const refreshHistory = async () => {
     const entries = await getHistory();
