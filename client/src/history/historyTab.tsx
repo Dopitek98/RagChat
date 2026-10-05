@@ -20,9 +20,9 @@ function HistoryTab({ entries, setLlmResponse }: HistoryTabProps) {
               Your previous queries will appear here.
             </p>
           ) : (
-            entries.map((entry, index) => (
+            entries.map((entry) => (
               <article
-                key={`${entry.userQuery}-${index}`}
+                key={entry.threadId}
                 className="cursor-pointer rounded-xl border border-slate-200 bg-slate-50/70 p-3 transition-colors hover:border-brand/40 hover:bg-brand/5"
                 onClick={() =>
                   setLlmResponse([
@@ -46,6 +46,10 @@ function HistoryTab({ entries, setLlmResponse }: HistoryTabProps) {
               >
                 <p className="line-clamp-3 text-sm font-medium leading-5 text-ink">
                   {entry.userQuery}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {entry.messageCount} user message
+                  {entry.messageCount === 1 ? "" : "s"}
                 </p>
                 <span className="mt-2 inline-flex rounded-md bg-brand/10 px-2 py-1 text-[11px] font-semibold text-brand">
                   {entry.searchType}
