@@ -8,21 +8,21 @@ There is **no document ingestion/indexing implementation in the inspected applic
 
 ## Technology stack
 
-| Component | Implementation |
-|---|---|
-| Language | TypeScript 5.9, React/TSX |
-| Runtime | Node.js, ESM; `tsx` for development |
-| LLM | Ollama `qwen3.5:4b`, temperature `0` |
-| Embeddings | Ollama `qwen3-embedding:latest`, dimensions `1024` |
-| Vector store | `MongoDBAtlasVectorSearch`, MongoDB collection `Embedding.Document2`, index `vector_index` |
-| Lexical retrieval | `wink-bm25-text-search` with `wink-nlp` |
-| Document loader | None in this repository; corpus is read from MongoDB |
-| Text splitter | None in this repository; chunking is upstream/unknown |
-| LangChain | `@langchain/core`, `@langchain/ollama`, `@langchain/mongodb`, `@langchain/textsplitters`, etc. |
-| LangGraph | `@langchain/langgraph` `^1.4.13` |
-| API | Express 5, CORS, JSON routes |
-| Persistence | MongoDB; query history in `Embedding.History`; no LangGraph checkpointer |
-| Client | React/Vite, served by Vite in development and nginx in the container |
+| Component         | Implementation                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| Language          | TypeScript 5.9, React/TSX                                                                      |
+| Runtime           | Node.js, ESM; `tsx` for development                                                            |
+| LLM               | Ollama `qwen3.5:4b`, temperature `0`                                                           |
+| Embeddings        | Ollama `qwen3-embedding:latest`, dimensions `1024`                                             |
+| Vector store      | `MongoDBAtlasVectorSearch`, MongoDB collection `Embedding.Document2`, index `vector_index`     |
+| Lexical retrieval | `wink-bm25-text-search` with `wink-nlp`                                                        |
+| Document loader   | None in this repository; corpus is read from MongoDB                                           |
+| Text splitter     | None in this repository; chunking is upstream/unknown                                          |
+| LangChain         | `@langchain/core`, `@langchain/ollama`, `@langchain/mongodb`, `@langchain/textsplitters`, etc. |
+| LangGraph         | `@langchain/langgraph` `^1.4.13`                                                               |
+| API               | Express 5, CORS, JSON routes                                                                   |
+| Persistence       | MongoDB; query history in `Embedding.History`; no LangGraph checkpointer                       |
+| Client            | React/Vite, served by Vite in development and nginx in the container                           |
 
 Configuration is loaded from `.env.local` or `.env.docker` in `backend/src/server.ts`. `OLLAMA_BASE_URL` defaults to `http://localhost:11434`; MongoDB uses `MONGO_URI`.
 
@@ -104,12 +104,12 @@ START -> extendQueryCall -> syntheziserCall -> END
 
 `backend/src/schema/messagesSchema.ts` defines the state:
 
-| State field | Type | Created by | Read by | Modified by | Purpose |
-|---|---|---|---|---|---|
-| `messages` | LangGraph `MessagesValue` | invocation with one `HumanMessage`; synthesis node returns one response | query expansion and synthesis | LangGraph message reducer | User input and model messages |
-| `searchQueries` | optional `string[]` | `extendQueryCall` | all retrieval/synthesis nodes | replaced by expansion result | Expanded retrieval queries |
-| `searchResults` | optional `string[]` | none observed | none observed | none observed | Declared but unused |
-| `llmCalls` | reduced number, default `0` | schema default | not observed | synthesis returns `1`, reducer adds | Counts synthesis calls; query expansion does not increment it |
+| State field     | Type                        | Created by                                                              | Read by                       | Modified by                         | Purpose                                                       |
+| --------------- | --------------------------- | ----------------------------------------------------------------------- | ----------------------------- | ----------------------------------- | ------------------------------------------------------------- |
+| `messages`      | LangGraph `MessagesValue`   | invocation with one `HumanMessage`; synthesis node returns one response | query expansion and synthesis | LangGraph message reducer           | User input and model messages                                 |
+| `searchQueries` | optional `string[]`         | `extendQueryCall`                                                       | all retrieval/synthesis nodes | replaced by expansion result        | Expanded retrieval queries                                    |
+| `searchResults` | optional `string[]`         | none observed                                                           | none observed                 | none observed                       | Declared but unused                                           |
+| `llmCalls`      | reduced number, default `0` | schema default                                                          | not observed                  | synthesis returns `1`, reducer adds | Counts synthesis calls; query expansion does not increment it |
 
 State is in-memory for one invocation. MongoDB history persistence is application-level result caching, not LangGraph checkpointing. Conversation history is not accumulated: each request starts with one `HumanMessage`, and the response is stored only as a history record containing serialized answer/reasoning.
 
@@ -159,16 +159,16 @@ The cache lookup uses exact `userQuery` and `searchType`. `findHistory()` return
 
 ## LangChain component map
 
-| Component | Location | Purpose | Input | Output |
-|---|---|---|---|---|
-| `HumanMessage` | `backend/src/invoke/invoke.ts` | Wraps user input | query string | message |
-| `SystemMessage` | query expansion and synthesis nodes | Supplies instructions | prompt text | message |
-| `ChatOllama` | `backend/src/models/models.ts` | Query expansion and answer generation | messages | AI message / structured object |
-| `OllamaEmbeddings` | `backend/src/models/models.ts` | Embeds semantic search queries | query text | vector |
-| `MongoDBAtlasVectorSearch` | `backend/src/mongo/mongoClientFactory.ts` | Semantic retrieval | query + stored vectors | scored LangChain documents |
-| `wink-bm25-text-search` | `backend/src/retrival/utils.ts` | Lexical retrieval | tokenized corpus + query | scored record IDs |
-| `StateGraph` | `backend/src/stateGraphs/*.ts` | Orchestrates nodes | graph state | compiled graph result |
-| `StateSchema`/`MessagesValue` | `backend/src/schema/messagesSchema.ts` | Defines state and message handling | state updates | merged state |
+| Component                     | Location                                  | Purpose                               | Input                    | Output                         |
+| ----------------------------- | ----------------------------------------- | ------------------------------------- | ------------------------ | ------------------------------ |
+| `HumanMessage`                | `backend/src/invoke/invoke.ts`            | Wraps user input                      | query string             | message                        |
+| `SystemMessage`               | query expansion and synthesis nodes       | Supplies instructions                 | prompt text              | message                        |
+| `ChatOllama`                  | `backend/src/models/models.ts`            | Query expansion and answer generation | messages                 | AI message / structured object |
+| `OllamaEmbeddings`            | `backend/src/models/models.ts`            | Embeds semantic search queries        | query text               | vector                         |
+| `MongoDBAtlasVectorSearch`    | `backend/src/mongo/mongoClientFactory.ts` | Semantic retrieval                    | query + stored vectors   | scored LangChain documents     |
+| `wink-bm25-text-search`       | `backend/src/retrival/utils.ts`           | Lexical retrieval                     | tokenized corpus + query | scored record IDs              |
+| `StateGraph`                  | `backend/src/stateGraphs/*.ts`            | Orchestrates nodes                    | graph state              | compiled graph result          |
+| `StateSchema`/`MessagesValue` | `backend/src/schema/messagesSchema.ts`    | Defines state and message handling    | state updates            | merged state                   |
 
 No `RunnableSequence`, `Retriever` wrapper, output parser, agent, or tool abstraction is used explicitly.
 
@@ -310,7 +310,7 @@ These are implementation observations and risks, not claims that the application
 
 ### How the RAG system works
 
-A user question is first checked against MongoDB history. On a cache miss, LangGraph expands the question into several retrieval queries. The selected graph then performs BM25 or MongoDB vector retrieval, optionally expands matching source line ranges by 30 lines, embeds the resulting context into a synthesis prompt, and calls Ollama `qwen3.5:4b`. The answer and reasoning are cached and returned to the React client.
+A user question is first checked against MongoDB history. LangGraph expands the question into several retrieval queries. The selected graph then performs BM25 or MongoDB vector retrieval, optionally expands matching source line ranges by 30 lines, embeds the resulting context into a synthesis prompt, and calls Ollama `qwen3.5:4b`. The answer and reasoning are cached and returned to the React client.
 
 ### Main data flows
 
