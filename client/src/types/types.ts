@@ -20,4 +20,16 @@ export interface HistoryEntry {
   searchType: SearchType;
   createdAt: Date;
   threadId: string;
+  messageCount: number;
+  messages: HistoryMessage[];
+}
+
+export interface HistoryMessage {
+  _id: string;
+  queryResult: string;
+  queryReasoning: string;
+  userQuery: string;
+  searchType: SearchType;
+  createdAt: Date;
+  threadId: string;
 }

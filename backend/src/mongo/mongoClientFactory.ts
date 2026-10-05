@@ -161,11 +161,37 @@ export async function findHistory() {
 
     const documents = await collection
       .find({})
-      .sort({ createdAt: -1 })
-      .limit(15)
+      .sort({ createdAt: 1 })
       .toArray();
 
-    return documents || { message: "No result found" };
+    const conversations = new Map<string, any>();
+
+    for (const document of documents) {
+      const threadId =
+        typeof document.threadId === "string" && document.threadId.trim()
+          ? document.threadId
+          : `history-entry:${document._id.toString()}`;
+      const existingConversation = conversations.get(threadId);
+
+      if (existingConversation) {
+        existingConversation.messageCount += 1;
+        existingConversation.messages.push(document);
+        continue;
+      }
+
+      conversations.set(threadId, {
+        ...document,
+        threadId,
+        messageCount: 1,
+        messages: [document],
+      });
+    }
+
+    return [...conversations.values()].sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() -
+        new Date(left.createdAt).getTime(),
+    );
   } finally {
     await client.close();
   }
