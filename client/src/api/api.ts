@@ -1,13 +1,14 @@
 export async function getEmbedding(
   query: string,
   searchType: string,
+  threadId?: string,
 ): Promise<any> {
   const response = await fetch("http://localhost:5000/api/embeddings", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ query, searchType }),
+    body: JSON.stringify({ query, searchType, threadId }),
   });
 
   if (!response.ok) {

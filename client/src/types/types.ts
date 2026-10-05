@@ -3,8 +3,8 @@ export type SearchType = "BM25" | "BM25Extended" | "SemanticExtended";
 export interface ChatProps {
   searchType: SearchType;
   onQuerySubmitted: () => void | Promise<void>;
-  llmResponse: [string, string];
-  setLlmResponse: (response: [string, string]) => void;
+  llmResponse: [string, string, string];
+  setLlmResponse: (response: [string, string, string]) => void;
 }
 
 export interface NavBarProps {
@@ -19,4 +19,5 @@ export interface HistoryEntry {
   userQuery: string;
   searchType: SearchType;
   createdAt: Date;
+  threadId: string;
 }

@@ -3,6 +3,7 @@ import UserInput from "./UserInput";
 import LLMOutput from "./LLMOutput";
 import { getEmbedding } from "../api/api";
 import type { ChatProps } from "../types/types";
+import { v4 as uuidv4 } from "uuid";
 
 function Chat({
   searchType,
@@ -18,12 +19,13 @@ function Chat({
 
   const sendToLLM = async () => {
     if (!text.trim()) return;
-    setLlmResponse(["", ""]);
-    const [reasoning, textResponse] = await getEmbedding(
+    setLlmResponse(["", "", ""]);
+    const [reasoning, textResponse, threadId] = await getEmbedding(
       text.trim(),
       searchType,
+      llmResponse[2] || uuidv4(),
     );
-    setLlmResponse([reasoning, textResponse]);
+    setLlmResponse([reasoning, textResponse, threadId]);
     await onQuerySubmitted();
   };
 

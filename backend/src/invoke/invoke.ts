@@ -4,6 +4,7 @@ import { bm25Graph } from "../stateGraphs/bm25Graph.js";
 import { StateGraph } from "@langchain/langgraph";
 import { bm25ExtendedGraph } from "../stateGraphs/bm25ExtendedGraph.js";
 import { persistQueryResult } from "../mongo/mongoClientFactory.js";
+import { randomUUID } from "crypto";
 
 //@ts-ignore
 const graphMap = new Map<string, StateGraph>();
@@ -14,15 +15,23 @@ graphMap.set("BM25Extended", bm25ExtendedGraph);
 export const sendAndReceiveMessage = async (
   userQuery: string,
   searchType: string,
+  threadId: string = randomUUID(),
 ) => {
   const graph = graphMap.get(searchType);
   if (!graph) {
     throw new Error(`Graph for search type '${searchType}' not found`);
   }
 
-  const result = await graph.invoke({
-    messages: [new HumanMessage(userQuery)],
-  });
+  const result = await graph.invoke(
+    {
+      messages: [new HumanMessage(userQuery)],
+    },
+    {
+      configurable: {
+        thread_id: threadId,
+      },
+    },
+  );
 
   await persistQueryResult(
     JSON.stringify(result.messages[1].contentBlocks[1]?.text || "no response"),
@@ -31,6 +40,7 @@ export const sendAndReceiveMessage = async (
     ),
     userQuery,
     searchType,
+    threadId,
   );
 
   return [
@@ -38,5 +48,6 @@ export const sendAndReceiveMessage = async (
       result.messages[1].contentBlocks[0]?.reasoning || "no response",
     ),
     JSON.stringify(result.messages[1].contentBlocks[1]?.text || "no response"),
+    threadId,
   ];
 };

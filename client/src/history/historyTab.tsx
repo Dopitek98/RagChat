@@ -2,7 +2,7 @@ import type { HistoryEntry } from "../types/types";
 
 interface HistoryTabProps {
   entries: HistoryEntry[];
-  setLlmResponse: (response: [string, string]) => void;
+  setLlmResponse: (response: [string, string, string]) => void;
 }
 
 function HistoryTab({ entries, setLlmResponse }: HistoryTabProps) {
@@ -24,11 +24,21 @@ function HistoryTab({ entries, setLlmResponse }: HistoryTabProps) {
               <article
                 key={`${entry.userQuery}-${index}`}
                 className="cursor-pointer rounded-xl border border-slate-200 bg-slate-50/70 p-3 transition-colors hover:border-brand/40 hover:bg-brand/5"
-                onClick={() => setLlmResponse([entry.queryReasoning, entry.queryResult])}
+                onClick={() =>
+                  setLlmResponse([
+                    entry.queryReasoning,
+                    entry.queryResult,
+                    entry.threadId,
+                  ])
+                }
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    setLlmResponse([entry.queryReasoning, entry.queryResult]);
+                    setLlmResponse([
+                      entry.queryReasoning,
+                      entry.queryResult,
+                      entry.threadId,
+                    ]);
                   }
                 }}
                 role="button"
