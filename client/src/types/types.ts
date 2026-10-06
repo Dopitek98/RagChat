@@ -18,10 +18,14 @@ export interface HistoryEntry {
   queryReasoning: string;
   userQuery: string;
   searchType: SearchType;
-  createdAt: Date;
+  createdAt: string;
   threadId: string;
   messageCount: number;
   messages: HistoryMessage[];
+}
+
+export interface HistoryResponse {
+  entries: HistoryEntry[];
 }
 
 export interface HistoryMessage {
@@ -30,6 +34,6 @@ export interface HistoryMessage {
   queryReasoning: string;
   userQuery: string;
   searchType: SearchType;
-  createdAt: Date;
+  createdAt: string;
   threadId: string;
 }

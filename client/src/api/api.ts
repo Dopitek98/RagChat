@@ -18,7 +18,9 @@ export async function getEmbedding(
   return response.json();
 }
 
-export async function getHistory(): Promise<any> {
+import type { HistoryResponse } from "../types/types";
+
+export async function getHistory(): Promise<HistoryResponse> {
   const response = await fetch("http://localhost:5000/api/history", {
     method: "GET",
     headers: {

@@ -15,7 +15,7 @@ function App() {
   ]);
 
   const refreshHistory = async () => {
-    const entries = await getHistory();
+    const { entries } = await getHistory();
     setHistory(entries);
   };
 

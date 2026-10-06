@@ -180,18 +180,21 @@ export async function findHistory() {
       }
 
       conversations.set(threadId, {
-        ...document,
+        _id: document._id,
+        createdAt: document.createdAt,
         threadId,
         messageCount: 1,
         messages: [document],
       });
     }
 
-    return [...conversations.values()].sort(
-      (left, right) =>
-        new Date(right.createdAt).getTime() -
-        new Date(left.createdAt).getTime(),
-    );
+    return {
+      entries: [...conversations.values()].sort(
+        (left, right) =>
+          new Date(right.createdAt).getTime() -
+          new Date(left.createdAt).getTime(),
+      ),
+    };
   } finally {
     await client.close();
   }
