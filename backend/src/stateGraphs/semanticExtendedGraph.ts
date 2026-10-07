@@ -1,6 +1,6 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { MessagesState } from "../schema/messagesSchema.js";
-import { extendQueryCall } from "../calls/semanticExtended/extendQueryCall.js";
+import { extendQueryCall } from "../calls/extendQueryCall.js";
 import { syntheziserSemanticExtendedCall } from "../calls/semanticExtended/syntheziserSemanticExtendedCall.js";
 import { createMongoDBCheckpointer } from "../retrival/LangChainUtils.js";
 

@@ -1,5 +1,5 @@
 import { SystemMessage } from "@langchain/core/messages";
-import { defaultStructuredModel } from "../../models/models.js";
+import { defaultStructuredModel } from "../models/models.js";
 
 export const extendQueryCall = async (state: any) => {
   const response = await defaultStructuredModel.invoke([
