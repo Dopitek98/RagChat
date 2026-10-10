@@ -1,6 +1,9 @@
 import { SystemMessage } from "@langchain/core/messages";
 import { queryExtenderPrompt } from "../../prompt/queryExtenderPrompt.js";
-import { defaultChatModel } from "../../models/models.js";
+import {
+  defaultChatModel,
+  defaultFinalOutputModel,
+} from "../../models/models.js";
 import type { ResultBm25 } from "../../types/types.js";
 import { bm25Search } from "../../retrival/utils.js";
 import { getAllDocuments } from "../../mongo/mongoClientFactory.js";
@@ -48,13 +51,15 @@ export const syntheziserBm25Call = async (state: any) => {
   const top5 = topFiveDocuments.map((el: any) => el.pageContent);
 
   const systemMessage: string = queryExtenderPrompt(top5);
-  const response = await defaultChatModel.invoke([
+  const response = await defaultFinalOutputModel.invoke([
     new SystemMessage(systemMessage),
-    ...state.messages,
   ]);
 
+  console.log("Response from syntheziserBm25Call:", response);
   return {
-    messages: [response],
-    llmCalls: 1,
+    finalOutput: {
+      response: response.response,
+      reasoning: response.reasoning,
+    },
   };
 };

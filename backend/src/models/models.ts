@@ -1,7 +1,11 @@
 import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama";
-import { QueriesStructuredOutput } from "../schema/messagesSchema.js";
+import {
+  AgentFinalOutput,
+  ClassificationResultSchema,
+  queryExtenderOutput,
+} from "../schema/messagesSchema.js";
 
-const DEFAULT_MODEL = "qwen3.5:4b";
+const DEFAULT_MODEL = "qwen3.5:9b";
 const DEFAULT_TEMPERATURE = 0;
 const DEFAULT_BASE_URL =
   process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
@@ -12,7 +16,19 @@ export const defaultStructuredModel = new ChatOllama({
   model: DEFAULT_MODEL,
   temperature: DEFAULT_TEMPERATURE,
   baseUrl: DEFAULT_BASE_URL,
-}).withStructuredOutput(QueriesStructuredOutput);
+}).withStructuredOutput(queryExtenderOutput);
+
+export const defaultClassifyModel = new ChatOllama({
+  model: DEFAULT_MODEL,
+  temperature: DEFAULT_TEMPERATURE,
+  baseUrl: DEFAULT_BASE_URL,
+}).withStructuredOutput(ClassificationResultSchema);
+
+export const defaultFinalOutputModel = new ChatOllama({
+  model: DEFAULT_MODEL,
+  temperature: DEFAULT_TEMPERATURE,
+  baseUrl: DEFAULT_BASE_URL,
+}).withStructuredOutput(AgentFinalOutput);
 
 export const defaultChatModel = new ChatOllama({
   model: DEFAULT_MODEL,

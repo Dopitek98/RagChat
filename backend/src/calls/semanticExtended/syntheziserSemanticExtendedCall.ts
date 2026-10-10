@@ -1,6 +1,9 @@
 import { SystemMessage } from "@langchain/core/messages";
 import { queryExtenderPrompt } from "../../prompt/queryExtenderPrompt.js";
-import { defaultChatModel } from "../../models/models.js";
+import {
+  defaultChatModel,
+  defaultFinalOutputModel,
+} from "../../models/models.js";
 import type { ContentResult } from "../../types/types.js";
 import {
   filterOutDuplicatesFromTopQueries,
@@ -25,12 +28,13 @@ export const syntheziserSemanticExtendedCall = async (state: any) => {
   const extendedChunks = await extendChunksWithMoreContext(mergedRanges);
 
   const systemMessage: string = queryExtenderPrompt(extendedChunks);
-  const response = await defaultChatModel.invoke([
+  const response = await defaultFinalOutputModel.invoke([
     new SystemMessage(systemMessage),
-    ...state.messages,
   ]);
   return {
-    messages: [response],
-    llmCalls: 1,
+    finalOutput: {
+      response: response.response,
+      reasoning: response.reasoning,
+    },
   };
 };

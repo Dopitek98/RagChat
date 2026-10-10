@@ -33,21 +33,19 @@ export const sendAndReceiveMessage = async (
     },
   );
 
+  console.log("Final output from graph:", result.finalOutput);
+
   await persistQueryResult(
-    JSON.stringify(result.messages[1].contentBlocks[1]?.text || "no response"),
-    JSON.stringify(
-      result.messages[1].contentBlocks[0]?.reasoning || "no response",
-    ),
+    JSON.stringify(result.finalOutput?.response || "no response"),
+    JSON.stringify(result.finalOutput?.reasoning || "no response"),
     userQuery,
     searchType,
     threadId,
   );
 
   return [
-    JSON.stringify(
-      result.messages[1].contentBlocks[0]?.reasoning || "no response",
-    ),
-    JSON.stringify(result.messages[1].contentBlocks[1]?.text || "no response"),
+    JSON.stringify(result.finalOutput?.reasoning || "no response"),
+    JSON.stringify(result.finalOutput?.response || "no response"),
     threadId,
   ];
 };
