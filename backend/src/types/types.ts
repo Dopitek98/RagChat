@@ -44,3 +44,8 @@ export interface MyDocument extends Document {
     };
   };
 }
+
+export type CombinedFinalOutput = {
+  response: string;
+  reasoning: string;
+};

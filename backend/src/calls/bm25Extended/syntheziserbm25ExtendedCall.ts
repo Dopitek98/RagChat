@@ -65,15 +65,18 @@ export const syntheziserBm25ExtendedCall = async (state: any) => {
 
   const extendedChunks = await extendChunksWithMoreContext(mergedRanges);
 
-  const systemMessage: string = queryExtenderPrompt(extendedChunks);
+  const systemMessage: string = queryExtenderPrompt(extendedChunks, state.combinedFinalOutput);
   const response = await defaultFinalOutputModel.invoke([
     new SystemMessage(systemMessage),
   ]);
 
+  const finalOutput = {
+    response: response.response,
+    reasoning: response.reasoning,
+  };
+
   return {
-    finalOutput: {
-      response: response.response,
-      reasoning: response.reasoning,
-    },
+    combinedFinalOutput: [finalOutput],
+    finalOutput,
   };
 };

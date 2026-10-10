@@ -50,16 +50,23 @@ export const syntheziserBm25Call = async (state: any) => {
 
   const top5 = topFiveDocuments.map((el: any) => el.pageContent);
 
-  const systemMessage: string = queryExtenderPrompt(top5);
+  const systemMessage: string = queryExtenderPrompt(
+    top5,
+    state.combinedFinalOutput,
+  );
   const response = await defaultFinalOutputModel.invoke([
     new SystemMessage(systemMessage),
   ]);
 
   console.log("Response from syntheziserBm25Call:", response);
+
+  const finalOutput = {
+    response: response.response,
+    reasoning: response.reasoning,
+  };
+
   return {
-    finalOutput: {
-      response: response.response,
-      reasoning: response.reasoning,
-    },
+    combinedFinalOutput: [finalOutput],
+    finalOutput,
   };
 };
