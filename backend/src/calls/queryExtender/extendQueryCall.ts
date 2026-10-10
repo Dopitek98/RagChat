@@ -4,8 +4,7 @@ import { defaultStructuredModel } from "../../models/models.js";
 export const extendQueryCall = async (state: any) => {
   console.log("extendQueryCall state:", state);
 
-  const userQuery =
-    state?.query ?? state.messages[state.messages.length - 1].content;
+  const userQuery = state?.query;
 
   const response = await defaultStructuredModel.invoke([
     new SystemMessage(
