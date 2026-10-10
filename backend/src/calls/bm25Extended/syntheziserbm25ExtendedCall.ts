@@ -1,6 +1,9 @@
 import { SystemMessage } from "@langchain/core/messages";
 import { queryExtenderPrompt } from "../../prompt/queryExtenderPrompt.js";
-import { defaultChatModel } from "../../models/models.js";
+import {
+  defaultChatModel,
+  defaultFinalOutputModel,
+} from "../../models/models.js";
 import type { ResultBm25 } from "../../types/types.js";
 import {
   bm25Search,
@@ -15,6 +18,9 @@ import {
 export const syntheziserBm25ExtendedCall = async (state: any) => {
   const tempUploads: ResultBm25[] = [];
   const documents = await getAllDocuments();
+  console.log(state.searchQueries.length);
+  console.log(state.searchQueries);
+  console.log(typeof state.searchQueries);
   for (const query of state.searchQueries) {
     console.log("Query: " + query);
 
@@ -60,13 +66,14 @@ export const syntheziserBm25ExtendedCall = async (state: any) => {
   const extendedChunks = await extendChunksWithMoreContext(mergedRanges);
 
   const systemMessage: string = queryExtenderPrompt(extendedChunks);
-  const response = await defaultChatModel.invoke([
+  const response = await defaultFinalOutputModel.invoke([
     new SystemMessage(systemMessage),
-    ...state.messages,
   ]);
 
   return {
-    messages: [response],
-    llmCalls: 1,
+    finalOutput: {
+      response: response.response,
+      reasoning: response.reasoning,
+    },
   };
 };

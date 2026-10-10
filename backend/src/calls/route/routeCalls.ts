@@ -1,0 +1,13 @@
+import { Send } from "@langchain/langgraph";
+import { MessagesState } from "../../schema/messagesSchema.js";
+
+export function routeToAgents(state: typeof MessagesState.State): Send[] {
+  console.log("Routing to agents based on classifications:", state);
+  return state.classifications.map(
+    (c) =>
+      new Send(c.source, {
+        query: c.query,
+        combinedFinalOutput: state.combinedFinalOutput,
+      }),
+  );
+}
