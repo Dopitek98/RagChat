@@ -2,9 +2,6 @@ import { SystemMessage } from "@langchain/core/messages";
 import { defaultClassifyModel } from "../../models/models.js";
 
 export const classifyQueryCall = async (state: any) => {
-  // console.log("classifyQueryCall state:", state);
-  console.log(state.messages[state.messages.length - 1].content);
-  // For each relevant source, generate a targeted sub-question optimized for that source.
   const response = await defaultClassifyModel.invoke([
     new SystemMessage(
       `
@@ -31,8 +28,6 @@ Example output:
       content: state.messages[state.messages.length - 1].content,
     },
   ]);
-
-  console.log("classifyQueryCall response:", response);
 
   return { classifications: response.classifications };
 };

@@ -44,3 +44,16 @@ export interface MyDocument extends Document {
     };
   };
 }
+
+export type CombinedFinalOutput = {
+  response: string;
+  reasoning: string;
+};
+
+/** Input document structure for MongoDB insertion */
+export type MongoHistoryInput = {
+  pageContent: string;
+  source: string;
+  fromLine: number;
+  toLine: number;
+};

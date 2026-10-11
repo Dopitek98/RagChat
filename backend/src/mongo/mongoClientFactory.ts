@@ -1,7 +1,7 @@
 ﻿import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { Collection, MongoClient } from "mongodb";
 import { defaultEmbeddingModel } from "../models/models.js";
-import { MyDocument } from "../types/types.js";
+import { MongoHistoryInput, MyDocument } from "../types/types.js";
 
 export const DATABASE_NAME = "Embedding";
 //export const COLLECTION_NAME = "Document";
@@ -18,11 +18,16 @@ export const collection = client
   .db(DATABASE_NAME)
   .collection<MyDocument>(COLLECTION_NAME);
 
+type ExtendedDocument = MyDocument & {
+  fromLine: number;
+  toLine: number;
+};
+
 export async function extendGivenContext(
   source: string,
   fromLines: number,
   toLines: number,
-) {
+): Promise<ExtendedDocument[]> {
   try {
     await client.connect();
 
@@ -45,7 +50,7 @@ export async function extendGivenContext(
           sort: { "loc.lines.from": 1 },
           projection: {
             text: 1,
-            _id: 1,
+            _id: 0,
             source: 1,
             fromLine: "$loc.lines.from",
             toLine: "$loc.lines.to",
@@ -54,7 +59,7 @@ export async function extendGivenContext(
       )
       .toArray();
 
-    return documents;
+    return documents as unknown as ExtendedDocument[];
   } finally {
     await client.close();
   }
@@ -103,6 +108,7 @@ export async function persistQueryResult(
   userQuery: string,
   searchType?: string,
   threadId?: string,
+  retrievedContext?: MongoHistoryInput[],
 ) {
   const client = new MongoClient(MONGO_URI);
 
@@ -120,6 +126,7 @@ export async function persistQueryResult(
       searchType,
       createdAt: new Date(),
       threadId,
+      retrievedContext,
     });
 
     return documents?.insertedId || "no result";
@@ -128,7 +135,11 @@ export async function persistQueryResult(
   }
 }
 
-export async function findQueryResult(userQuery: string, searchType: string) {
+export async function findQueryResult(
+  userQuery: string,
+  searchType: string,
+  threadId?: string,
+) {
   const client = new MongoClient(MONGO_URI);
 
   try {
@@ -141,6 +152,7 @@ export async function findQueryResult(userQuery: string, searchType: string) {
     const documents = await collection.findOne({
       userQuery,
       searchType,
+      threadId: threadId || { $exists: false },
     });
 
     return documents || { message: "No result found" };

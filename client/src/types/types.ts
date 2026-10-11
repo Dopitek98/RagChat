@@ -1,10 +1,19 @@
 export type SearchType = "BM25" | "BM25Extended" | "SemanticExtended";
 
+export interface RetrievedContext {
+  pageContent: string;
+  source: string;
+  fromLine: number;
+  toLine: number;
+}
+
+export type LlmResponse = [string, string, string, RetrievedContext[]];
+
 export interface ChatProps {
   searchType: SearchType;
   onQuerySubmitted: () => void | Promise<void>;
-  llmResponse: [string, string, string];
-  setLlmResponse: (response: [string, string, string]) => void;
+  llmResponse: LlmResponse;
+  setLlmResponse: (response: LlmResponse) => void;
 }
 
 export interface NavBarProps {
@@ -36,4 +45,5 @@ export interface HistoryMessage {
   searchType: SearchType;
   createdAt: string;
   threadId: string;
+  retrievedContext?: RetrievedContext[];
 }

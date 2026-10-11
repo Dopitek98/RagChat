@@ -1,4 +1,10 @@
-export const queryExtenderPrompt = (extendedChunks: string[]) => `
+import { CombinedFinalOutput } from "../types/types.js";
+
+export const queryExtenderPrompt = (
+  extendedChunks: string,
+  combinedFinalOutput: CombinedFinalOutput[],
+  userQuery?: string,
+) => `
 You are a RAG Synthesis Assistant.
 Your task is to answer the user's question using the retrieved context first, but NEVER return an empty response.
 
@@ -41,5 +47,17 @@ Confidence:
 Gaps:
 <missing information or "None">
 
+## User's question:
+${userQuery ?? "No user query provided."}
+
 ## Available Context
-${JSON.stringify(extendedChunks)}`;
+${JSON.stringify(extendedChunks)}
+
+
+## Previous conversation context:
+${combinedFinalOutput
+  .map(
+    (o: any, i: number) =>
+      `Turn ${i + 1}:\nResponse: ${o?.response ?? ""}\nReasoning: ${o?.reasoning ?? ""}`,
+  )
+  .join("\n\n")}`;

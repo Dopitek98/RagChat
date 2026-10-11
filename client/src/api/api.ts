@@ -2,7 +2,7 @@ export async function getEmbedding(
   query: string,
   searchType: string,
   threadId?: string,
-): Promise<any> {
+): Promise<EmbeddingResponse> {
   const response = await fetch("http://localhost:5000/api/embeddings", {
     method: "POST",
     headers: {
@@ -18,7 +18,9 @@ export async function getEmbedding(
   return response.json();
 }
 
-import type { HistoryResponse } from "../types/types";
+import type { HistoryResponse, LlmResponse } from "../types/types";
+
+export type EmbeddingResponse = LlmResponse;
 
 export async function getHistory(): Promise<HistoryResponse> {
   const response = await fetch("http://localhost:5000/api/history", {

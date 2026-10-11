@@ -13,6 +13,7 @@ router.post("/embeddings", async (req: any, res: any) => {
     const existingResult = await findQueryResult(
       req.body.query,
       req.body.searchType,
+      req.body.threadId,
     );
 
     if (
@@ -34,7 +35,6 @@ router.post("/embeddings", async (req: any, res: any) => {
       req.body.threadId,
     );
 
-    // console.log("Sending response:", JSON.stringify(result));
     res.status(201).json(result);
   } catch (error) {
     console.error("Error occurred:", error);

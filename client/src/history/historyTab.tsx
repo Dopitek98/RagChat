@@ -1,8 +1,8 @@
-import type { HistoryEntry } from "../types/types";
+import type { HistoryEntry, LlmResponse } from "../types/types";
 
 interface HistoryTabProps {
   entries: HistoryEntry[];
-  setLlmResponse: (response: [string, string, string]) => void;
+  setLlmResponse: (response: LlmResponse) => void;
 }
 
 function HistoryTab({ entries, setLlmResponse }: HistoryTabProps) {
@@ -33,6 +33,7 @@ function HistoryTab({ entries, setLlmResponse }: HistoryTabProps) {
                       lastMessage.queryReasoning,
                       lastMessage.queryResult,
                       entry.threadId,
+                      lastMessage.retrievedContext ?? [],
                     ])
                   }
                   onKeyDown={(event) => {
@@ -42,6 +43,7 @@ function HistoryTab({ entries, setLlmResponse }: HistoryTabProps) {
                         lastMessage.queryReasoning,
                         lastMessage.queryResult,
                         entry.threadId,
+                        lastMessage.retrievedContext ?? [],
                       ]);
                     }
                   }}

@@ -18,9 +18,6 @@ import {
 export const syntheziserBm25ExtendedCall = async (state: any) => {
   const tempUploads: ResultBm25[] = [];
   const documents = await getAllDocuments();
-  console.log(state.searchQueries.length);
-  console.log(state.searchQueries);
-  console.log(typeof state.searchQueries);
   for (const query of state.searchQueries) {
     console.log("Query: " + query);
 
@@ -65,15 +62,34 @@ export const syntheziserBm25ExtendedCall = async (state: any) => {
 
   const extendedChunks = await extendChunksWithMoreContext(mergedRanges);
 
-  const systemMessage: string = queryExtenderPrompt(extendedChunks);
+  const retrievedDocuments = extendedChunks.flat().map((item) => ({
+    pageContent: item.text,
+    source: item.source,
+    fromLine: item.fromLine,
+    toLine: item.toLine,
+  }));
+
+  const retrievedContext = retrievedDocuments
+    .map((item) => item.pageContent)
+    .join("\n");
+
+  const systemMessage: string = queryExtenderPrompt(
+    retrievedContext,
+    state.combinedFinalOutput,
+    state.userQuery,
+  );
   const response = await defaultFinalOutputModel.invoke([
     new SystemMessage(systemMessage),
   ]);
 
+  const finalOutput = {
+    response: response.response,
+    reasoning: response.reasoning,
+  };
+
   return {
-    finalOutput: {
-      response: response.response,
-      reasoning: response.reasoning,
-    },
+    retrievedContext: retrievedDocuments,
+    combinedFinalOutput: [finalOutput],
+    finalOutput,
   };
 };

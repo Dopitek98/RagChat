@@ -9,7 +9,12 @@ export const answerUserQueryCall = async (state: any) => {
 You are a helpful, accurate, and concise AI assistant. Answer the user's questions directly and clearly. Use the information provided by the user and your available knowledge. If the question is ambiguous, ask a clarifying question when necessary. Do not invent facts; when uncertain, say so. Follow the user's instructions while respecting applicable safety and privacy requirements. Prefer practical, well-structured answers and adapt the level of detail to the user's needs.
 
 ## Previous conversation context:
-${state.combinedFinalOutput.map((o: any) => o.response).join("\n")}
+${state.combinedFinalOutput
+  .map(
+    (o: any, i: number) =>
+      `Turn ${i + 1}:\nResponse: ${o?.response ?? ""}\nReasoning: ${o?.reasoning ?? ""}`,
+  )
+  .join("\n\n")}
       `,
     ),
     {
