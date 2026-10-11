@@ -33,19 +33,19 @@ export const sendAndReceiveMessage = async (
     },
   );
 
-  console.log("Final output from graph:", result.finalOutput);
-
   await persistQueryResult(
     JSON.stringify(result.finalOutput?.response || "no response"),
     JSON.stringify(result.finalOutput?.reasoning || "no response"),
     userQuery,
     searchType,
     threadId,
+    result.retrievedContext,
   );
 
   return [
     JSON.stringify(result.finalOutput?.reasoning || "no response"),
     JSON.stringify(result.finalOutput?.response || "no response"),
     threadId,
+    result.retrievedContext,
   ];
 };

@@ -46,19 +46,27 @@ export const syntheziserBm25Call = async (state: any) => {
 
   const topFiveDocuments = documentsByScore
     .sort((a, b) => b.score - a.score)
+    .map((el) => ({
+      pageContent: el.pageContent,
+      source: el.source,
+      fromLine: el.fromLine,
+      toLine: el.toLine,
+    }))
     .slice(0, 5);
 
-  const top5 = topFiveDocuments.map((el: any) => el.pageContent);
+  const retrievedContext = topFiveDocuments
+    .map((el: any) => el.pageContent)
+    .flat()
+    .join("\n");
 
   const systemMessage: string = queryExtenderPrompt(
-    top5,
+    retrievedContext,
     state.combinedFinalOutput,
+    state.userQuery,
   );
   const response = await defaultFinalOutputModel.invoke([
     new SystemMessage(systemMessage),
   ]);
-
-  console.log("Response from syntheziserBm25Call:", response);
 
   const finalOutput = {
     response: response.response,
@@ -66,6 +74,7 @@ export const syntheziserBm25Call = async (state: any) => {
   };
 
   return {
+    retrievedContext: topFiveDocuments,
     combinedFinalOutput: [finalOutput],
     finalOutput,
   };

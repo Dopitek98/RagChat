@@ -2,9 +2,6 @@ import { SystemMessage } from "@langchain/core/messages";
 import { defaultStructuredModel } from "../../models/models.js";
 
 export const extendQueryCall = async (state: any) => {
-  console.log("extendQueryCall state:", state);
-
-  // const userQuery = state?.classifications?.[state.classifications.length - 1]?.query ?? "";
   const userQuery = state?.query ?? "";
   console.log("userQuery:", userQuery);
   const response = await defaultStructuredModel.invoke([
@@ -23,8 +20,6 @@ ${userQuery}
       `,
     ),
   ]);
-
-  console.log("extendQueryCall response:", response);
 
   return {
     userQuery,

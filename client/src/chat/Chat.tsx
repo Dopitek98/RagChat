@@ -19,13 +19,18 @@ function Chat({
 
   const sendToLLM = async () => {
     if (!text.trim()) return;
-    setLlmResponse(["", "", ""]);
-    const [reasoning, textResponse, threadId] = await getEmbedding(
+    setLlmResponse(["", "", "", []]);
+    const [reasoning, textResponse, threadId, retrievedContext] = await getEmbedding(
       text.trim(),
       searchType,
       llmResponse[2] || uuidv4(),
     );
-    setLlmResponse([reasoning, textResponse, threadId]);
+    setLlmResponse([
+      reasoning,
+      textResponse,
+      threadId,
+      retrievedContext ?? [],
+    ]);
     await onQuerySubmitted();
   };
 

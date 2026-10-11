@@ -91,12 +91,12 @@ export const extendChunksWithMoreContext = async (topQueries: Result[]) => {
       topQueries[i].toLine,
     );
 
-    const merged = extendedResult
-      .flat()
-      .map((item) => item.text)
-      .join("\n");
+    // const merged = extendedResult
+    //   .flat()
+    //   .map((item) => item.text)
+    //   .join("\n");
 
-    extendedChunks.push(merged);
+    extendedChunks.push(extendedResult);
   }
   return extendedChunks;
 };

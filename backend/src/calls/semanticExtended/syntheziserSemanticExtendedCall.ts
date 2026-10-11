@@ -27,9 +27,24 @@ export const syntheziserSemanticExtendedCall = async (state: any) => {
 
   const extendedChunks = await extendChunksWithMoreContext(mergedRanges);
 
+  const retrievedDocuments = extendedChunks.flat().map((item) => ({
+    pageContent: item.text,
+    source: item.source,
+    fromLine: item.fromLine,
+    toLine: item.toLine,
+  }));
+
+  const retrievedContext = extendedChunks
+    .flat()
+    .map((item) => item.text)
+    .join("\n");
+
+  console.log("Retrieved context for system message:", retrievedContext);
+
   const systemMessage: string = queryExtenderPrompt(
-    extendedChunks,
+    retrievedContext,
     state.combinedFinalOutput,
+    state.userQuery,
   );
   const response = await defaultFinalOutputModel.invoke([
     new SystemMessage(systemMessage),
@@ -41,6 +56,7 @@ export const syntheziserSemanticExtendedCall = async (state: any) => {
   };
 
   return {
+    retrievedContext: retrievedDocuments,
     combinedFinalOutput: [finalOutput],
     finalOutput,
   };

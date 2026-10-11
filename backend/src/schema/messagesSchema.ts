@@ -13,6 +13,16 @@ export const MessagesState = new StateSchema({
   messages: MessagesValue,
   userQuery: z.string().describe("The original user query"),
   searchQueries: z.array(z.string()).optional(),
+  retrievedContext: z
+    .array(
+      z.object({
+        pageContent: z.string(),
+        source: z.string(),
+        fromLine: z.number(),
+        toLine: z.number(),
+      }),
+    )
+    .optional(),
   classifications: z.array(
     z.object({
       source: z.enum(["answerUserQueryCall", "extendQueryCall"]),
