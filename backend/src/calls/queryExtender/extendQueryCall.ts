@@ -3,7 +3,6 @@ import { defaultStructuredModel } from "../../models/models.js";
 
 export const extendQueryCall = async (state: any) => {
   const userQuery = state?.query ?? "";
-  console.log("userQuery:", userQuery);
   const response = await defaultStructuredModel.invoke([
     new SystemMessage(
       `

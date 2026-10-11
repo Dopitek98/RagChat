@@ -23,7 +23,6 @@ export const syntheziserSemanticExtendedCall = async (state: any) => {
     topQueries,
     DEFAULT_CHUNK_EXTENSION,
   );
-  console.log(mergedRanges);
 
   const extendedChunks = await extendChunksWithMoreContext(mergedRanges);
 
@@ -38,8 +37,6 @@ export const syntheziserSemanticExtendedCall = async (state: any) => {
     .flat()
     .map((item) => item.text)
     .join("\n");
-
-  console.log("Retrieved context for system message:", retrievedContext);
 
   const systemMessage: string = queryExtenderPrompt(
     retrievedContext,

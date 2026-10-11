@@ -33,19 +33,24 @@ export const sendAndReceiveMessage = async (
     },
   );
 
+  const shouldPersist = result.classifications.some(
+    (classification: { source: string }) =>
+      classification.source === "extendQueryCall",
+  );
+
   await persistQueryResult(
     JSON.stringify(result.finalOutput?.response || "no response"),
     JSON.stringify(result.finalOutput?.reasoning || "no response"),
     userQuery,
     searchType,
     threadId,
-    result.retrievedContext,
+    shouldPersist ? result.retrievedContext : null,
   );
 
   return [
     JSON.stringify(result.finalOutput?.reasoning || "no response"),
     JSON.stringify(result.finalOutput?.response || "no response"),
     threadId,
-    result.retrievedContext,
+    shouldPersist ? result.retrievedContext : null,
   ];
 };
