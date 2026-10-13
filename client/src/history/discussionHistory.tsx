@@ -32,7 +32,12 @@ function DiscussionHistory({ messages, onMessageSelect }: DiscussionHistoryProps
               ]);
             }}
           >
-            <span className="line-clamp-2">{message.userQuery}</span>
+            <div className="flex flex-col items-start gap-1">
+              <span className="inline-flex rounded-md bg-brand/10 px-2 py-1 text-[11px] font-semibold text-brand">
+                {message.searchType}
+              </span>
+              <span className="line-clamp-2">{message.userQuery}</span>
+            </div>
           </button>
         ))}
       </div>
