@@ -1,4 +1,8 @@
-export type SearchType = "BM25" | "BM25Extended" | "SemanticExtended";
+export type SearchType =
+  | "BM25"
+  | "BM25Extended"
+  | "SemanticExtended"
+  | "Hybrid";
 
 export interface RetrievedContext {
   pageContent: string;

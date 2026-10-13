@@ -1,7 +1,7 @@
 import { StateGraph, START, END, MemorySaver } from "@langchain/langgraph";
 import { MessagesState } from "../schema/messagesSchema.js";
 import { extendQueryCall } from "../calls/queryExtender/extendQueryCall.js";
-import { syntheziserBm25ExtendedCall } from "../calls/bm25Extended/syntheziserbm25ExtendedCall.js";
+import { syntheziserBm25ExtendedCall } from "../calls/bm25/syntheziserbm25ExtendedCall.js";
 import {
   createMongoDBCheckpointer,
   memoryCheckpointer,

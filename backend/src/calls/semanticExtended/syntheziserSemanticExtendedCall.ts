@@ -14,10 +14,7 @@ import {
 import { DEFAULT_CHUNK_EXTENSION } from "../../mongo/mongoClientFactory.js";
 
 export const syntheziserSemanticExtendedCall = async (state: any) => {
-  const uploads: ContentResult[] =
-    await prepareDocumentBySimilaritySearch(state);
-
-  const topQueries = filterOutDuplicatesFromTopQueries(uploads);
+  const topQueries = await getSemanticExtendedResponse(state);
 
   const mergedRanges = groupAndMergeBySource(
     topQueries,
@@ -57,4 +54,13 @@ export const syntheziserSemanticExtendedCall = async (state: any) => {
     combinedFinalOutput: [finalOutput],
     finalOutput,
   };
+};
+
+export const getSemanticExtendedResponse = async (state: any) => {
+  const uploads: ContentResult[] =
+    await prepareDocumentBySimilaritySearch(state);
+
+  const topQueries = filterOutDuplicatesFromTopQueries(uploads);
+
+  return topQueries;
 };

@@ -1,18 +1,6 @@
 Context compression and deduplication.
 
-
-Inline citations linked to source passages.
-
-Document name, page number, and section.
-
-Clickable evidence snippets with highlighted text.
-
-Support for multiple sources per claim.
-
-Clear distinction between retrieved facts and model-generated inference.
-
 Abstention when evidence is insufficient or conflicting.
-
 
 
 Context-aware follow-up questions.
