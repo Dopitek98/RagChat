@@ -2,7 +2,6 @@ import { SystemMessage } from "@langchain/core/messages";
 import { defaultFinalOutputModel } from "../../models/models.js";
 
 export const answerUserQueryCall = async (state: any) => {
-  console.log("answerUserQueryCall state:", state);
   const response = await defaultFinalOutputModel.invoke([
     new SystemMessage(
       `

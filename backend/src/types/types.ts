@@ -57,3 +57,14 @@ export type MongoHistoryInput = {
   fromLine: number;
   toLine: number;
 };
+
+
+export type HybridDocument = {
+  source: string;
+  fromLine: number;
+  toLine: number;
+  pageContent: string;
+  semanticRank?: number;
+  bm25Rank?: number;
+  score: number;
+};

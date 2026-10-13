@@ -8,6 +8,7 @@ export const DATABASE_NAME = "Embedding";
 export const COLLECTION_NAME = "Document2";
 export const HISTORY_COLLECTION_NAME = "History";
 export const DEFAULT_CHUNK_EXTENSION = 30; // Number of lines to extend the context by
+export const SMALL_CHUNK_EXTENSION = 3; // Number of lines to extend the context by
 export const MONGO_URI =
   process.env.MONGO_URI ??
   "mongodb://admin:admin@localhost:27017/admin?directConnection=true";

@@ -5,12 +5,14 @@ import { StateGraph } from "@langchain/langgraph";
 import { bm25ExtendedGraph } from "../stateGraphs/bm25ExtendedGraph.js";
 import { persistQueryResult } from "../mongo/mongoClientFactory.js";
 import { randomUUID } from "crypto";
+import { hybridAgent } from "../stateGraphs/HybridGraph.js";
 
 //@ts-ignore
 const graphMap = new Map<string, StateGraph>();
 graphMap.set("BM25", bm25Graph);
 graphMap.set("SemanticExtended", semanticExtendedAgent);
 graphMap.set("BM25Extended", bm25ExtendedGraph);
+graphMap.set("Hybrid", hybridAgent);
 
 export const sendAndReceiveMessage = async (
   userQuery: string,
@@ -33,19 +35,24 @@ export const sendAndReceiveMessage = async (
     },
   );
 
+  const shouldPersist = result.classifications.some(
+    (classification: { source: string }) =>
+      classification.source === "extendQueryCall",
+  );
+
   await persistQueryResult(
     JSON.stringify(result.finalOutput?.response || "no response"),
     JSON.stringify(result.finalOutput?.reasoning || "no response"),
     userQuery,
     searchType,
     threadId,
-    result.retrievedContext,
+    shouldPersist ? result.retrievedContext : null,
   );
 
   return [
     JSON.stringify(result.finalOutput?.reasoning || "no response"),
     JSON.stringify(result.finalOutput?.response || "no response"),
     threadId,
-    result.retrievedContext,
+    shouldPersist ? result.retrievedContext : null,
   ];
 };
