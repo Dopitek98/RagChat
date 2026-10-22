@@ -1,8 +1,8 @@
-# RAG System Analysis
+# QA Agent System Analysis
 
 ## Executive summary
 
-This repository implements a TypeScript/Express RAG application with a React/Vite client. The backend reads a pre-existing MongoDB corpus, expands the user query with a local Ollama model, executes one of three LangGraph pipelines, retrieves context using either in-memory BM25 or MongoDB Atlas vector search, and asks the same Ollama chat model to synthesize an answer. Query results are cached in MongoDB history.
+This repository implements the QA Agent, a TypeScript/Express RAG application with a React/Vite client. The backend reads a pre-existing MongoDB corpus, expands the user query with a local Ollama model, executes one of three LangGraph pipelines, retrieves context using either in-memory BM25 or MongoDB Atlas vector search, and asks the same Ollama chat model to synthesize an answer. Query results are cached in MongoDB history.
 
 There is **no document ingestion/indexing implementation in the inspected application code**: no loader, PDF parser, text splitter, embedding write path, or vector-store population job is present. The `Embedding.Document2` collection must already contain text, embeddings, source identifiers, and line ranges.
 

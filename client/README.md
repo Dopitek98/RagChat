@@ -1,3 +1,3 @@
-# React + TypeScript + Vite + LangChain
+# QA Agent
 
-This template provides a minimal setup to get React RAG chat
+React + TypeScript + Vite + LangChain client for the QA agent.
