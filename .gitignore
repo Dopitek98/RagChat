@@ -3,6 +3,10 @@ backend/node_modules/
 client/node_modules/
 embedding/node_modules/
 
+
+#Graphify
+graphify-out/
+
 # Production build
 backend/dist/
 backend/build/
