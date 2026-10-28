@@ -40,6 +40,13 @@ export const queryExtenderOutput = z.object({
   searchQueries: z.array(z.string()).describe("Your extended user queries"),
 });
 
+export const investigationExtenderOutput = z.object({
+  searchQueries: z
+    .array(z.string())
+    .length(5)
+    .describe("Up to 5 analyst investigation queries, one per item"),
+});
+
 export const ClassificationResultSchema = z.object({
   classifications: z
     .array(
@@ -49,4 +56,80 @@ export const ClassificationResultSchema = z.object({
       }),
     )
     .describe("List of agents to invoke with their targeted sub-questions"),
+});
+
+export const AgentClassificationResultSchema = z.object({
+  classifications: z
+    .array(
+      z.object({
+        source: z.enum([
+          "bugsAgent",
+          "featureAgent",
+          "refactoringAgent",
+          "directAgent",
+          "notRelatedAgent",
+        ]),
+        query: z.string(),
+      }),
+    )
+    .describe("List of agents to invoke with their targeted sub-questions"),
+});
+
+export const investigationReportOutput = z.object({
+  summary: z
+    .string()
+    .describe(
+      "Brief description of the reported issue without assuming its cause",
+    ),
+  observedBehavior: z
+    .string()
+    .describe("Reported behavior and any missing details"),
+  expectedBehavior: z
+    .string()
+    .describe("User-provided expectation, or unknown if not provided"),
+  stepsToReproduce: z
+    .array(z.string())
+    .describe("Supplied or verified reproduction steps; empty if unknown"),
+  investigationAndEvidence: z
+    .array(z.string())
+    .describe(
+      "Source findings with verified locations, unverified handoff claims, or a statement that no files were inspected",
+    ),
+  possibleCause: z
+    .array(z.string())
+    .describe(
+      "Evidence-backed hypotheses with uncertainty, or why the cause is unknown",
+    ),
+  recommendedNextSteps: z
+    .array(z.string())
+    .describe("Prioritized verification or remediation steps"),
+  openQuestionsAndLimitations: z
+    .array(z.string())
+    .describe(
+      "Missing information, failed reads, and uncertainties; empty if none identified",
+    ),
+});
+
+export const AgentMessagesState = new StateSchema({
+  messages: MessagesValue,
+  userQuery: z.string().describe("The original user query"),
+  searchQueries: z.array(z.string()).optional(),
+  retrievedContext: z.string().optional(),
+  inputTokens: z.number().optional(),
+  outputTokens: z.number().optional(),
+  totalTokens: z.number().optional(),
+  modelCalls: z.number().optional(),
+  classifications: z.array(
+    z.object({
+      source: z.enum(["answerUserQueryCall", "extendQueryCall"]),
+      query: z.string(),
+    }),
+  ),
+  combinedFinalOutput: new ReducedValue(
+    z.array(AgentFinalOutput).default(() => []),
+    { reducer: (current, update) => current.concat(update) },
+  ),
+  finalOutput: AgentFinalOutput.optional(),
+  investigationReportOutput: investigationReportOutput.optional(),
+  graphifyOutput: z.array(z.string().optional()),
 });
