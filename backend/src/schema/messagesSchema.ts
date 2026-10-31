@@ -121,15 +121,19 @@ export const investigationReportOutput = z.object({
     ),
 });
 
+export const investigationSufficiencyOutput = z.object({
+  sufficient: z.boolean().describe("Whether the developer's response meaningfully answers the user's request"),
+  reasoning: z.string().describe("Why the context is or is not sufficient"),
+});
+
 export const AgentMessagesState = new StateSchema({
   messages: MessagesValue,
   userQuery: z.string().describe("The original user query"),
   searchQueries: z.array(z.string()).optional(),
+  currentStepIndex: z.number().int().nonnegative().default(0),
+  sufficient: z.boolean().default(false),
+  sufficiencyReasoning: z.string().optional(),
   retrievedContext: z.string().optional(),
-  inputTokens: z.number().optional(),
-  outputTokens: z.number().optional(),
-  totalTokens: z.number().optional(),
-  modelCalls: z.number().optional(),
   classifications: z.array(
     z.object({
       source: z.enum(["answerUserQueryCall", "extendAgentCall"]),
@@ -142,5 +146,11 @@ export const AgentMessagesState = new StateSchema({
   ),
   finalOutput: AgentFinalOutput.optional(),
   investigationReportOutput: z.string().optional(),
+  investigationSteps: z.array(z.object({
+    query: z.string(),
+    handoff: z.string(),
+    developerResponse: z.string().optional(),
+    evaluation: investigationSufficiencyOutput.optional(),
+  })).default(() => []),
   graphifyOutput: z.string().optional(),
 });

@@ -2,7 +2,7 @@ import { SystemMessage } from "@langchain/core/messages";
 import { defaultInvestigationChatModel } from "../../models/models.js";
 
 export const extendAgentCall = async (state: any) => {
-  const userQuery = state?.query ?? "";
+  const userQuery = state?.userQuery ?? state?.query ?? "";
   const response = await defaultInvestigationChatModel.invoke([
     new SystemMessage(
       `
@@ -352,6 +352,12 @@ ${userQuery}
   return {
     userQuery,
     searchQueries: response.searchQueries,
+    currentStepIndex: 0,
+    sufficient: false,
+    sufficiencyReasoning: "",
+    graphifyOutput: "",
+    investigationReportOutput: "",
+    investigationSteps: [],
     combinedFinalOutput: state.combinedFinalOutput,
   };
 };

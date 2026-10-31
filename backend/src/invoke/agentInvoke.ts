@@ -7,6 +7,7 @@ import { persistQueryResult } from "../mongo/mongoClientFactory.js";
 import { randomUUID } from "crypto";
 import { hybridAgent } from "../stateGraphs/HybridGraph.js";
 import { agentDevGraph } from "../stateGraphs/agentDevGraph.js";
+import { TokenTracker } from "../tokenCounter/tokenTracer.js";
 
 //@ts-ignore
 const graphMap = new Map<string, StateGraph>();
@@ -25,11 +26,13 @@ export const sendMessageToAgent = async (
     throw new Error(`Graph for search type '${searchType}' not found`);
   }
 
+  const tracker = new TokenTracker();
   const result = await graph.invoke(
     {
       messages: [new HumanMessage(userQuery)],
     },
     {
+      callbacks: [tracker],
       configurable: {
         thread_id: threadId,
       },
@@ -55,6 +58,7 @@ export const sendMessageToAgent = async (
     JSON.stringify(result.finalOutput?.response || "no response"),
     threadId,
     shouldPersist ? result.retrievedContext : null,
+    { ...tracker.usage },
   ];
 };
 
@@ -63,34 +67,43 @@ export const sendDevMessageToAgent = async (
   searchType: string,
   threadId: string = randomUUID(),
 ) => {
+  const tracker = new TokenTracker();
   const result = await agentDevGraph.invoke(
     {
       messages: [new HumanMessage(userQuery)],
     },
     {
+      callbacks: [tracker],
       configurable: {
         thread_id: threadId,
       },
     },
   );
 
-  const shouldPersist = result.classifications.some(
+  const isInvestigation = result.classifications.some(
     (classification: { source: string }) =>
-      classification.source === "extendQueryCall",
+      classification.source === "extendAgentCall",
   );
+  const response = isInvestigation
+    ? result.investigationReportOutput
+    : result.finalOutput?.response;
+  const reasoning = isInvestigation
+    ? result.sufficiencyReasoning
+    : result.finalOutput?.reasoning;
 
   await persistQueryResult(
-    JSON.stringify(result.investigationReportOutput || "no response"),
-    JSON.stringify(result.finalOutput?.reasoning || "no response"),
+    JSON.stringify(response || "no response"),
+    JSON.stringify(reasoning || "no response"),
     userQuery,
     searchType,
     threadId,
   );
 
   return [
-    JSON.stringify(result.finalOutput?.reasoning || "no response"),
-    JSON.stringify(result.finalOutput?.response || "no response"),
+    JSON.stringify(reasoning || "no response"),
+    JSON.stringify(response || "no response"),
     threadId,
-    shouldPersist ? result.retrievedContext : null,
+    null,
+    { ...tracker.usage },
   ];
 };

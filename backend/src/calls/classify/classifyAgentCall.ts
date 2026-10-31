@@ -21,5 +21,8 @@ ambiguous, choose the closest category without assuming unstated requirements.
     },
   ]);
 
-  return { classifications: response.classifications };
+  return {
+    classifications: response.classifications,
+    userQuery: state.messages[state.messages.length - 1].content,
+  };
 };

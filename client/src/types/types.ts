@@ -11,10 +11,19 @@ export interface RetrievedContext {
   toLine: number;
 }
 
-export type LlmResponse = [string, string, string, RetrievedContext[]];
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  modelCalls: number;
+  callsWithUsage: number;
+}
+
+export type LlmResponse = [string, string, string, RetrievedContext[], TokenUsage?];
 
 export interface ChatProps {
   searchType: SearchType;
+  codeAnalysis: boolean;
   onQuerySubmitted: () => void | Promise<void>;
   llmResponse: LlmResponse;
   setLlmResponse: (response: LlmResponse) => void;
@@ -23,6 +32,8 @@ export interface ChatProps {
 export interface NavBarProps {
   searchType: SearchType;
   setSearchType: (type: SearchType) => void;
+  codeAnalysis: boolean;
+  setCodeAnalysis: (enabled: boolean) => void;
 }
 
 export interface HistoryEntry {

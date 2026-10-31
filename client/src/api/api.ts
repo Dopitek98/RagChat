@@ -1,7 +1,7 @@
 import type {
   HistoryResponse,
-  LlmResponse,
   RetrievedContext,
+  TokenUsage,
 } from "../types/types";
 
 export async function getEmbedding(
@@ -24,8 +24,8 @@ export async function getEmbedding(
   return response.json();
 }
 
-export type EmbeddingResponse = LlmResponse;
-export type DevResponse = [string, string, string, RetrievedContext[] | null];
+export type EmbeddingResponse = [string, string, string, (RetrievedContext[] | null)?, TokenUsage?];
+export type DevResponse = [string, string, string, RetrievedContext[] | null, TokenUsage];
 
 export async function getDevMessage(
   query: string,

@@ -3,7 +3,6 @@ import {
   createAgent,
   SystemMessage,
   ToolMessage,
-  createMiddleware,
 } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
@@ -16,25 +15,6 @@ import * as path from "node:path";
 
 const TOKEN_BUDGET = 10000;
 const GRAPHIFY_MCP_URL = "http://localhost:8080/mcp";
-
-export const tokenTracker = createMiddleware({
-  name: "TokenUsageTracker",
-
-  wrapModelCall: async (request: any, handler) => {
-    const response = await handler(request);
-
-    const metadata = response.usage_metadata;
-
-    if (metadata) {
-      request.state.inputTokens += metadata.input_tokens;
-      request.state.outputTokens += metadata.output_tokens;
-      request.state.totalTokens += metadata.total_tokens;
-      request.state.modelCalls += 1;
-    }
-
-    return response;
-  },
-});
 
 export const adapter = new MCPAdapter({
   servers: {

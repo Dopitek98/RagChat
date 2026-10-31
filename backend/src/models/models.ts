@@ -5,10 +5,11 @@ import {
   ClassificationAgentSchema,
   queryExtenderOutput,
   investigationExtenderOutput,
+  investigationSufficiencyOutput,
 } from "../schema/messagesSchema.js";
 import { ChatOpenRouter } from "@langchain/openrouter";
 import { createAgent } from "langchain";
-import { toolRead, tokenTracker, wrappedTools } from "../tools/tools.js";
+import { toolRead, wrappedTools } from "../tools/tools.js";
 import { investigationReportOutput } from "../schema/messagesSchema.js";
 import { softwareDeveloperAnalyzePrompt } from "../prompt/softwareDeveloperAnalyzePrompt.js";
 import { graphifyInvestigationAssistant } from "../prompt/graphifyInvestigationAssistant.js";
@@ -76,26 +77,26 @@ export const defaultEmbeddingModel = new OllamaEmbeddings({
 //   tools: [toolRead],
 //   // responseFormat: investigationReportOutput,
 //   systemPrompt: softwareDeveloperAnalyzePrompt(),
-//   middleware: [tokenTracker],
 // });
 
 // export const graphifyInvestigationAgent = createAgent({
 //   model: defaultChatModel,
 //   tools: wrappedTools,
 //   systemPrompt: graphifyInvestigationAssistant(),
-//   middleware: [tokenTracker],
 // });
 
 export const defaultPaidChatModel = new ChatOpenRouter({
-  model: "deepseek/deepseek-v4.1-flash-1017",
+  model: "openai/gpt-4o-mini",
   temperature: 0,
 });
+
+export const investigationSufficiencyModel =
+  defaultPaidChatModel.withStructuredOutput(investigationSufficiencyOutput);
 
 export const graphifyInvestigationAgent = createAgent({
   model: defaultPaidChatModel,
   tools: wrappedTools,
   systemPrompt: graphifyInvestigationAssistant(),
-  middleware: [tokenTracker],
 });
 
 export const softwareDeveloperAnalystAgent = createAgent({
@@ -103,5 +104,4 @@ export const softwareDeveloperAnalystAgent = createAgent({
   tools: [toolRead],
   // responseFormat: investigationReportOutput,
   systemPrompt: softwareDeveloperAnalyzePrompt(),
-  middleware: [tokenTracker],
 });
