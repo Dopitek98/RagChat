@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import UserInput from "./UserInput";
 import LLMOutput from "./LLMOutput";
-import { getEmbedding } from "../api/api";
+import { getDevMessage, getEmbedding } from "../api/api";
 import type { ChatProps } from "../types/types";
 import { v4 as uuidv4 } from "uuid";
 
 function Chat({
   searchType,
+  codeAnalysis,
   onQuerySubmitted,
   llmResponse,
   setLlmResponse,
@@ -20,7 +21,8 @@ function Chat({
   const sendToLLM = async () => {
     if (!text.trim()) return;
     setLlmResponse(["", "", "", []]);
-    const [reasoning, textResponse, threadId, retrievedContext] = await getEmbedding(
+    const request = codeAnalysis ? getDevMessage : getEmbedding;
+    const [reasoning, textResponse, threadId, retrievedContext, usage] = await request(
       text.trim(),
       searchType,
       llmResponse[2] || uuidv4(),
@@ -30,6 +32,7 @@ function Chat({
       textResponse,
       threadId,
       retrievedContext ?? [],
+      usage,
     ]);
     await onQuerySubmitted();
   };
@@ -63,7 +66,7 @@ function Chat({
           </button>
         </div>
         <p className="mt-2 text-center text-[11px] text-slate-400">
-          Using {searchType} retrieval
+          {codeAnalysis ? "Using experimental code analysis" : `Using ${searchType} retrieval`}
         </p>
       </div>
     </section>

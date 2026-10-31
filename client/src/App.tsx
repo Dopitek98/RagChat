@@ -8,6 +8,7 @@ import { getHistory } from "./api/api";
 
 function App() {
   const [searchType, setSearchType] = useState<SearchType>("BM25");
+  const [codeAnalysis, setCodeAnalysis] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [llmResponse, setLlmResponse] = useState<LlmResponse>([
     "",
@@ -27,12 +28,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white text-ink">
-      <NavBar searchType={searchType} setSearchType={setSearchType} />
+      <NavBar searchType={searchType} setSearchType={setSearchType} codeAnalysis={codeAnalysis} setCodeAnalysis={setCodeAnalysis} />
       <HistoryTab entries={history} setLlmResponse={setLlmResponse} />
       <ContextTab retrievedContext={llmResponse[3]} />
       <main className="flex min-h-[calc(100vh-65px)] w-full flex-col items-center justify-center px-4 sm:px-6">
         <Chat
           searchType={searchType}
+          codeAnalysis={codeAnalysis}
           onQuerySubmitted={refreshHistory}
           llmResponse={llmResponse}
           setLlmResponse={setLlmResponse}

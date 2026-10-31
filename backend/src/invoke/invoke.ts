@@ -6,6 +6,7 @@ import { bm25ExtendedGraph } from "../stateGraphs/bm25ExtendedGraph.js";
 import { persistQueryResult } from "../mongo/mongoClientFactory.js";
 import { randomUUID } from "crypto";
 import { hybridAgent } from "../stateGraphs/HybridGraph.js";
+import { TokenTracker } from "../tokenCounter/tokenTracer.js";
 
 //@ts-ignore
 const graphMap = new Map<string, StateGraph>();
@@ -24,11 +25,13 @@ export const sendAndReceiveMessage = async (
     throw new Error(`Graph for search type '${searchType}' not found`);
   }
 
+  const tracker = new TokenTracker();
   const result = await graph.invoke(
     {
       messages: [new HumanMessage(userQuery)],
     },
     {
+      callbacks: [tracker],
       configurable: {
         thread_id: threadId,
       },
@@ -54,5 +57,6 @@ export const sendAndReceiveMessage = async (
     JSON.stringify(result.finalOutput?.response || "no response"),
     threadId,
     shouldPersist ? result.retrievedContext : null,
+    { ...tracker.usage },
   ];
 };

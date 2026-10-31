@@ -1,0 +1,109 @@
+import { HumanMessage } from "@langchain/core/messages";
+import { semanticExtendedAgent } from "../stateGraphs/semanticExtendedGraph.js";
+import { bm25Graph } from "../stateGraphs/bm25Graph.js";
+import { StateGraph } from "@langchain/langgraph";
+import { bm25ExtendedGraph } from "../stateGraphs/bm25ExtendedGraph.js";
+import { persistQueryResult } from "../mongo/mongoClientFactory.js";
+import { randomUUID } from "crypto";
+import { hybridAgent } from "../stateGraphs/HybridGraph.js";
+import { agentDevGraph } from "../stateGraphs/agentDevGraph.js";
+import { TokenTracker } from "../tokenCounter/tokenTracer.js";
+
+//@ts-ignore
+const graphMap = new Map<string, StateGraph>();
+graphMap.set("BM25", bm25Graph);
+graphMap.set("SemanticExtended", semanticExtendedAgent);
+graphMap.set("BM25Extended", bm25ExtendedGraph);
+graphMap.set("Hybrid", hybridAgent);
+
+export const sendMessageToAgent = async (
+  userQuery: string,
+  searchType: string,
+  threadId: string = randomUUID(),
+) => {
+  const graph = graphMap.get(searchType);
+  if (!graph) {
+    throw new Error(`Graph for search type '${searchType}' not found`);
+  }
+
+  const tracker = new TokenTracker();
+  const result = await graph.invoke(
+    {
+      messages: [new HumanMessage(userQuery)],
+    },
+    {
+      callbacks: [tracker],
+      configurable: {
+        thread_id: threadId,
+      },
+    },
+  );
+
+  const shouldPersist = result.classifications.some(
+    (classification: { source: string }) =>
+      classification.source === "extendQueryCall",
+  );
+
+  await persistQueryResult(
+    JSON.stringify(result.finalOutput?.response || "no response"),
+    JSON.stringify(result.finalOutput?.reasoning || "no response"),
+    userQuery,
+    searchType,
+    threadId,
+    shouldPersist ? result.retrievedContext : null,
+  );
+
+  return [
+    JSON.stringify(result.finalOutput?.reasoning || "no response"),
+    JSON.stringify(result.finalOutput?.response || "no response"),
+    threadId,
+    shouldPersist ? result.retrievedContext : null,
+    { ...tracker.usage },
+  ];
+};
+
+export const sendDevMessageToAgent = async (
+  userQuery: string,
+  searchType: string,
+  threadId: string = randomUUID(),
+) => {
+  const tracker = new TokenTracker();
+  const result = await agentDevGraph.invoke(
+    {
+      messages: [new HumanMessage(userQuery)],
+    },
+    {
+      callbacks: [tracker],
+      configurable: {
+        thread_id: threadId,
+      },
+    },
+  );
+
+  const isInvestigation = result.classifications.some(
+    (classification: { source: string }) =>
+      classification.source === "extendAgentCall",
+  );
+  const response = isInvestigation
+    ? result.investigationReportOutput
+    : result.finalOutput?.response;
+  const reasoning = isInvestigation
+    ? result.sufficiencyReasoning
+    : result.finalOutput?.reasoning;
+
+  await persistQueryResult(
+    JSON.stringify(response || "no response"),
+    JSON.stringify(reasoning || "no response"),
+    userQuery,
+    searchType,
+    threadId,
+  );
+
+  return [
+    JSON.stringify(reasoning || "no response"),
+    JSON.stringify(response || "no response"),
+    threadId,
+    null,
+    { ...tracker.usage },
+  ];
+};

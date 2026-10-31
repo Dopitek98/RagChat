@@ -9,8 +9,8 @@ function UserInput({
       className="min-h-12 w-full bg-transparent px-4 py-3 text-sm text-ink outline-none placeholder:text-slate-400"
       type="text"
       onChange={handleTextChange}
-      placeholder="Message your RAG assistant..."
-      aria-label="Message your RAG assistant"
+      placeholder="Message your QA agent..."
+      aria-label="Message your QA agent"
     />
   );
 }

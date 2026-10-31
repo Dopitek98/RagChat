@@ -1,13 +1,15 @@
 import { marked } from "marked";
 import { useState } from "react";
+import type { LlmResponse } from "../types/types";
 
-function LLMOutput({ agentResponse }: { agentResponse: any }) {
+function LLMOutput({ agentResponse }: { agentResponse: LlmResponse }) {
   const [showReasoning, setShowReasoning] = useState(false);
   const reasoning = agentResponse[0];
   const reasoningText = reasoning.replace(/\\n/g, "\n");
 
   const response = agentResponse[1];
   const responseText = response.replace(/\\n/g, "\n");
+  const usage = agentResponse[4];
 
   return (
     <div className="space-y-4">
@@ -27,6 +29,12 @@ function LLMOutput({ agentResponse }: { agentResponse: any }) {
         </article>
       ) : (
         <div className="rounded-2xl border border-dashed border-slate-200 px-5 py-8 text-center text-sm text-slate-400">Your grounded answer will appear here.</div>
+      )}
+      {usage && (
+        <p className="text-xs text-slate-500">
+          Reported tokens: {usage.inputTokens} input, {usage.outputTokens} output, {usage.totalTokens} total
+          {` (${usage.callsWithUsage}/${usage.modelCalls} model calls reported usage)`}
+        </p>
       )}
     </div>
   );

@@ -1,3 +1,9 @@
+import type {
+  HistoryResponse,
+  RetrievedContext,
+  TokenUsage,
+} from "../types/types";
+
 export async function getEmbedding(
   query: string,
   searchType: string,
@@ -18,9 +24,28 @@ export async function getEmbedding(
   return response.json();
 }
 
-import type { HistoryResponse, LlmResponse } from "../types/types";
+export type EmbeddingResponse = [string, string, string, (RetrievedContext[] | null)?, TokenUsage?];
+export type DevResponse = [string, string, string, RetrievedContext[] | null, TokenUsage];
 
-export type EmbeddingResponse = LlmResponse;
+export async function getDevMessage(
+  query: string,
+  searchType: string,
+  threadId?: string,
+): Promise<DevResponse> {
+  const response = await fetch("http://localhost:5000/api/dev", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query, searchType, threadId }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
 
 export async function getHistory(): Promise<HistoryResponse> {
   const response = await fetch("http://localhost:5000/api/history", {
