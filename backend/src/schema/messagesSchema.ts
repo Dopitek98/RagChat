@@ -58,6 +58,17 @@ export const ClassificationResultSchema = z.object({
     .describe("List of agents to invoke with their targeted sub-questions"),
 });
 
+export const ClassificationAgentSchema = z.object({
+  classifications: z
+    .array(
+      z.object({
+        source: z.enum(["answerUserQueryCall", "extendAgentCall"]),
+        query: z.string(),
+      }),
+    )
+    .describe("List of agents to invoke with their targeted sub-questions"),
+});
+
 export const AgentClassificationResultSchema = z.object({
   classifications: z
     .array(
@@ -121,7 +132,7 @@ export const AgentMessagesState = new StateSchema({
   modelCalls: z.number().optional(),
   classifications: z.array(
     z.object({
-      source: z.enum(["answerUserQueryCall", "extendQueryCall"]),
+      source: z.enum(["answerUserQueryCall", "extendAgentCall"]),
       query: z.string(),
     }),
   ),
@@ -130,6 +141,6 @@ export const AgentMessagesState = new StateSchema({
     { reducer: (current, update) => current.concat(update) },
   ),
   finalOutput: AgentFinalOutput.optional(),
-  investigationReportOutput: investigationReportOutput.optional(),
-  graphifyOutput: z.array(z.string().optional()),
+  investigationReportOutput: z.string().optional(),
+  graphifyOutput: z.string().optional(),
 });

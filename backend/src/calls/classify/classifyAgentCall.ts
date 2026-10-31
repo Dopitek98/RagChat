@@ -7,7 +7,7 @@ export const classifyAgentCall = async (state: any) => {
       `
 Classify the user's request for the coding-agent workflow. Return a structured
 result with a classifications array. Each entry must use one of these sources:
-- extendQueryCall: Documentation, codebase, and technical references
+- extendAgentCall: Documentation, codebase, and technical references
 - answerUserQueryCall: Questions outside the technical domain
 
 Select every category explicitly relevant to the request, using each source at

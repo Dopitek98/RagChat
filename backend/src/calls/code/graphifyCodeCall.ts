@@ -1,12 +1,11 @@
 import { graphifyInvestigationAgent } from "../../models/models.js";
 
 export const graphifyCodeCall = async (state: any) => {
-  let idx = 0;
-  let response;
-  for (const investigation of state.searchQueries) {
+  const outputs: string[] = [];
+
+  for (const investigation of state.searchQueries ?? []) {
     console.log("investigation: " + investigation);
-    if (idx === 1) break;
-    response = await graphifyInvestigationAgent.invoke(
+    const response = await graphifyInvestigationAgent.invoke(
       {
         messages: {
           role: "human",
@@ -17,10 +16,14 @@ export const graphifyCodeCall = async (state: any) => {
         recursionLimit: 200, // default is typically 25
       },
     );
-    idx++;
+
+    outputs.push(response.messages.at(-1)?.text || "no response");
+    console.log("INV ENDED ***********");
+    break;
   }
 
-  return {
-    graphifyOutput: response!.messages.at(-1)?.text || "no response",
-  };
+  const graphifyOutput = outputs.join("\n\n");
+  console.log("GRAPHIFY STATE");
+  console.log("FINAL OUTPUT STATE: " + graphifyOutput);
+  return { graphifyOutput: graphifyOutput || "no response" };
 };

@@ -2,6 +2,7 @@ import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama";
 import {
   AgentFinalOutput,
   ClassificationResultSchema,
+  ClassificationAgentSchema,
   queryExtenderOutput,
   investigationExtenderOutput,
 } from "../schema/messagesSchema.js";
@@ -12,7 +13,8 @@ import { investigationReportOutput } from "../schema/messagesSchema.js";
 import { softwareDeveloperAnalyzePrompt } from "../prompt/softwareDeveloperAnalyzePrompt.js";
 import { graphifyInvestigationAssistant } from "../prompt/graphifyInvestigationAssistant.js";
 
-const DEFAULT_MODEL = "gemma4:12b";
+// const DEFAULT_MODEL = "gemma4:12b";
+const DEFAULT_MODEL = "qwen3.5:9b";
 const DEFAULT_TEMPERATURE = 0;
 const DEFAULT_BASE_URL =
   process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
@@ -35,7 +37,7 @@ export const defaultAgentClassifyModel = new ChatOllama({
   model: DEFAULT_MODEL,
   temperature: DEFAULT_TEMPERATURE,
   baseUrl: DEFAULT_BASE_URL,
-}).withStructuredOutput(ClassificationResultSchema);
+}).withStructuredOutput(ClassificationAgentSchema);
 
 export const defaultFinalOutputModel = new ChatOllama({
   model: DEFAULT_MODEL,
@@ -69,17 +71,37 @@ export const defaultEmbeddingModel = new OllamaEmbeddings({
 
 // Agents
 
-export const softwareDeveloperAnalystAgent = createAgent({
-  model: defaultChatModel,
-  tools: [toolRead],
-  responseFormat: investigationReportOutput,
-  systemPrompt: softwareDeveloperAnalyzePrompt(),
-  middleware: [tokenTracker],
+// export const softwareDeveloperAnalystAgent = createAgent({
+//   model: defaultChatModel,
+//   tools: [toolRead],
+//   // responseFormat: investigationReportOutput,
+//   systemPrompt: softwareDeveloperAnalyzePrompt(),
+//   middleware: [tokenTracker],
+// });
+
+// export const graphifyInvestigationAgent = createAgent({
+//   model: defaultChatModel,
+//   tools: wrappedTools,
+//   systemPrompt: graphifyInvestigationAssistant(),
+//   middleware: [tokenTracker],
+// });
+
+export const defaultPaidChatModel = new ChatOpenRouter({
+  model: "deepseek/deepseek-v4.1-flash-1017",
+  temperature: 0,
 });
 
 export const graphifyInvestigationAgent = createAgent({
-  model: defaultChatModel,
+  model: defaultPaidChatModel,
   tools: wrappedTools,
   systemPrompt: graphifyInvestigationAssistant(),
+  middleware: [tokenTracker],
+});
+
+export const softwareDeveloperAnalystAgent = createAgent({
+  model: defaultPaidChatModel,
+  tools: [toolRead],
+  // responseFormat: investigationReportOutput,
+  systemPrompt: softwareDeveloperAnalyzePrompt(),
   middleware: [tokenTracker],
 });

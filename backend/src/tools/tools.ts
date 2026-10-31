@@ -46,6 +46,7 @@ export const adapter = new MCPAdapter({
 
 async function createWrappedTools() {
   const tools = await adapter.listTools();
+  console.log(tools);
 
   return tools.map((mcpTool) => {
     return tool(
@@ -58,8 +59,7 @@ async function createWrappedTools() {
       {
         name: mcpTool.name,
         description: mcpTool.description ?? "",
-        // Preserve each tool's original schema.
-        schema: z.object({}).passthrough(),
+        schema: mcpTool.schema,
       },
     );
   });
