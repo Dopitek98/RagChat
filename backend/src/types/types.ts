@@ -20,7 +20,16 @@ export type CodeContentResult = {
     parentName: string | null;
     child: ObjectId[] | null;
     description: string | null;
+    relatedClasses?: RelatedClass[];
+    type?: string | null;
   };
+};
+
+export type RelatedClass = {
+  source: string | null;
+  name: string | null;
+  parentName: string | null;
+  description: string | null;
 };
 
 export type Result = {

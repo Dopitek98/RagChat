@@ -6,7 +6,10 @@ import {
   extendChunksWithMoreContext,
   DEFAULT_CLASS_LEVEL,
 } from "../../retrival/utils.js";
-import { SMALL_CHUNK_EXTENSION } from "../../mongo/mongoClientFactory.js";
+import {
+  getHierarchyDocumentsByIds,
+  SMALL_CHUNK_EXTENSION,
+} from "../../mongo/mongoClientFactory.js";
 import {
   getCodeAnalysisSemanticResponse,
   getSemanticExtendedResponse,
@@ -132,16 +135,53 @@ export const syntheziserCodeHybridCall = async (state: any) => {
     },
   );
 
-  const retrievedContext = topHybridDocuments
-    .map((item) => JSON.stringify(item.content))
+  const relatedClassIds = [
+    ...new Map(
+      topHybridDocuments
+        .filter((item) => item.content.level !== DEFAULT_CLASS_LEVEL)
+        .flatMap((item) => item.content.child ?? [])
+        .map((id) => [id.toString(), id] as const),
+    ).values(),
+  ];
+  const relatedClassDocuments =
+    await getHierarchyDocumentsByIds(relatedClassIds);
+  const relatedClassesById = new Map(
+    relatedClassDocuments.map(({ _id, ...document }) => [
+      _id.toString(),
+      document,
+    ]),
+  );
+  const topHybridDocumentsWithRelatedClasses = topHybridDocuments.map(
+    (item) => {
+      if (item.content.level === DEFAULT_CLASS_LEVEL) return item;
+
+      return {
+        ...item,
+        content: {
+          ...item.content,
+          relatedClasses: (item.content.child ?? []).flatMap((id) => {
+            const relatedClass = relatedClassesById.get(id.toString());
+            return relatedClass ? [relatedClass] : [];
+          }),
+        },
+      };
+    },
+  );
+
+  console.log("topHybridDocuments", topHybridDocumentsWithRelatedClasses);
+
+  const retrievedContext = topHybridDocumentsWithRelatedClasses
+    .map((item) =>
+      JSON.stringify({
+        name: item.content.name,
+        description: item.content.description,
+        score: item.content.score,
+        type: item.content.type,
+        relatedClasses: item.content.relatedClasses,
+      }),
+    )
     .join("\n");
 
-  console.log("retrievedContext", retrievedContext);
-  // const systemMessage = queryExtenderPrompt(
-  //   retrievedContext,
-  //   state.combinedFinalOutput,
-  //   state.userQuery,
-  // );
   const response = await defaultFinalOutputModel.invoke([
     new SystemMessage(`
     You are a helpful assistant that provides answers to user queries based on the provided context. Use the context to generate a comprehensive and accurate response to the user's question.
@@ -161,7 +201,7 @@ ${JSON.stringify(retrievedContext, null, 2)}
   };
 
   return {
-    retrievedContext,
+    topHybridDocuments: topHybridDocumentsWithRelatedClasses,
     combinedFinalOutput: [finalOutput],
     finalOutput,
   };

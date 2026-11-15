@@ -1,7 +1,11 @@
 ﻿import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
-import { Collection, MongoClient } from "mongodb";
+import { Collection, MongoClient, ObjectId } from "mongodb";
 import { defaultEmbeddingModel } from "../models/models.js";
-import { CodeContentResult, MongoHistoryInput, MyDocument } from "../types/types.js";
+import {
+  CodeContentResult,
+  MongoHistoryInput,
+  MyDocument,
+} from "../types/types.js";
 
 export const DATABASE_NAME = "Embedding";
 //export const COLLECTION_NAME = "Document";
@@ -23,6 +27,52 @@ export const documentCollection = client
 export const hierarchyCollection = client
   .db(DATABASE_NAME)
   .collection<any>(HIERARCHY_COLLECTION_NAME);
+
+export type RelatedHierarchyDocument = {
+  _id: ObjectId;
+  source: string | null;
+  name: string | null;
+  parentName: string | null;
+  description: string | null;
+  type?: string | null;
+};
+
+export async function getHierarchyDocumentsByIds(
+  ids: ObjectId[],
+): Promise<RelatedHierarchyDocument[]> {
+  if (ids.length === 0) return [];
+
+  try {
+    await client.connect();
+
+    const documents = await hierarchyCollection
+      .find(
+        { _id: { $in: ids } },
+        {
+          projection: {
+            _id: 1,
+            source: 1,
+            name: 1,
+            parentName: 1,
+            description: 1,
+            type: 1,
+          },
+        },
+      )
+      .toArray();
+
+    return documents.map((document) => ({
+      _id: document._id,
+      source: document.source ?? null,
+      name: document.name ?? null,
+      parentName: document.parentName ?? null,
+      description: document.description ?? null,
+      type: document.type ?? null,
+    }));
+  } finally {
+    await client.close();
+  }
+}
 
 type ExtendedDocument = MyDocument & {
   fromLine: number;
@@ -131,16 +181,19 @@ export async function getAllHierarchyKeywords(): Promise<CodeContentResult[]> {
     const documents = await client
       .db(DATABASE_NAME)
       .collection(HIERARCHY_COLLECTION_NAME)
-      .find({}, {
-        projection: {
-          level: 1,
-          keywords: 1,
-          name: 1,
-          parentName: 1,
-          child: 1,
-          description: 1,
+      .find(
+        {},
+        {
+          projection: {
+            level: 1,
+            keywords: 1,
+            name: 1,
+            parentName: 1,
+            child: 1,
+            description: 1,
+          },
         },
-      })
+      )
       .toArray();
 
     return documents.map((doc) => ({
@@ -148,7 +201,10 @@ export async function getAllHierarchyKeywords(): Promise<CodeContentResult[]> {
         id: doc._id,
         level: doc.level,
         keywords: Array.isArray(doc.keywords)
-          ? doc.keywords.filter((keyword: unknown): keyword is string => typeof keyword === "string")
+          ? doc.keywords.filter(
+              (keyword: unknown): keyword is string =>
+                typeof keyword === "string",
+            )
           : null,
         score: 0,
         name: doc.name,

@@ -1,9 +1,5 @@
 import { MCPAdapter } from "@langchain/mcp-adapters";
-import {
-  createAgent,
-  SystemMessage,
-  ToolMessage,
-} from "langchain";
+import { createAgent, SystemMessage, ToolMessage } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
 import { ChatOllama } from "@langchain/ollama";
@@ -26,7 +22,6 @@ export const adapter = new MCPAdapter({
 
 async function createWrappedTools() {
   const tools = await adapter.listTools();
-  console.log(tools);
 
   return tools.map((mcpTool) => {
     return tool(

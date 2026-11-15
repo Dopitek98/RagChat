@@ -1,5 +1,31 @@
 import * as z from "zod";
 import { StateSchema, MessagesValue, ReducedValue } from "@langchain/langgraph";
+import { ObjectId } from "mongodb";
+import type { CodeContentResult } from "../types/types.js";
+
+const codeContentResultSchema: z.ZodType<CodeContentResult> = z.object({
+  content: z.object({
+    id: z.instanceof(ObjectId),
+    level: z.number(),
+    keywords: z.array(z.string()).nullable(),
+    score: z.number(),
+    name: z.string(),
+    parentName: z.string().nullable(),
+    child: z.array(z.instanceof(ObjectId)).nullable(),
+    description: z.string().nullable(),
+    type: z.string().nullable(),
+    relatedClasses: z
+      .array(
+        z.object({
+          source: z.string().nullable(),
+          name: z.string().nullable(),
+          parentName: z.string().nullable(),
+          description: z.string().nullable(),
+        }),
+      )
+      .optional(),
+  }),
+});
 
 export const AgentFinalOutput = z.object({
   response: z
@@ -40,7 +66,7 @@ export const agentCodeState = new StateSchema({
   messages: MessagesValue,
   userQuery: z.string().describe("The original user query"),
   searchQueries: z.array(z.string()).optional(),
-  retrievedContext: z.string().optional(),
+  retrievedContext: z.array(codeContentResultSchema).optional(),
   classifications: z.array(
     z.object({
       source: z.enum(["answerUserQueryCall", "syntheziserCall"]),
