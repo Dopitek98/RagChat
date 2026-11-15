@@ -4,6 +4,8 @@ export type SearchType =
   | "SemanticExtended"
   | "Hybrid";
 
+export type CodeAnalysisType = "graphify" | "joern" | null;
+
 export interface RetrievedContext {
   pageContent: string;
   source: string;
@@ -23,7 +25,7 @@ export type LlmResponse = [string, string, string, RetrievedContext[], TokenUsag
 
 export interface ChatProps {
   searchType: SearchType;
-  codeAnalysis: boolean;
+  codeAnalysis: CodeAnalysisType;
   onQuerySubmitted: () => void | Promise<void>;
   llmResponse: LlmResponse;
   setLlmResponse: (response: LlmResponse) => void;
@@ -32,8 +34,8 @@ export interface ChatProps {
 export interface NavBarProps {
   searchType: SearchType;
   setSearchType: (type: SearchType) => void;
-  codeAnalysis: boolean;
-  setCodeAnalysis: (enabled: boolean) => void;
+  codeAnalysis: CodeAnalysisType;
+  setCodeAnalysis: (type: CodeAnalysisType) => void;
 }
 
 export interface HistoryEntry {

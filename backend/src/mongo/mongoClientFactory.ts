@@ -1,12 +1,13 @@
 ﻿import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { Collection, MongoClient } from "mongodb";
 import { defaultEmbeddingModel } from "../models/models.js";
-import { MongoHistoryInput, MyDocument } from "../types/types.js";
+import { CodeContentResult, MongoHistoryInput, MyDocument } from "../types/types.js";
 
 export const DATABASE_NAME = "Embedding";
 //export const COLLECTION_NAME = "Document";
-export const COLLECTION_NAME = "Document2";
+export const DOCUMENT_COLLECTION_NAME = "Document2";
 export const HISTORY_COLLECTION_NAME = "History";
+export const HIERARCHY_COLLECTION_NAME = "Hierarchy";
 export const DEFAULT_CHUNK_EXTENSION = 30; // Number of lines to extend the context by
 export const SMALL_CHUNK_EXTENSION = 3; // Number of lines to extend the context by
 export const MONGO_URI =
@@ -15,9 +16,13 @@ export const MONGO_URI =
 
 export const client = new MongoClient(MONGO_URI);
 
-export const collection = client
+export const documentCollection = client
   .db(DATABASE_NAME)
-  .collection<MyDocument>(COLLECTION_NAME);
+  .collection<MyDocument>(DOCUMENT_COLLECTION_NAME);
+
+export const hierarchyCollection = client
+  .db(DATABASE_NAME)
+  .collection<any>(HIERARCHY_COLLECTION_NAME);
 
 type ExtendedDocument = MyDocument & {
   fromLine: number;
@@ -32,7 +37,7 @@ export async function extendGivenContext(
   try {
     await client.connect();
 
-    const documents = await collection
+    const documents = await documentCollection
       .find(
         {
           $and: [
@@ -66,21 +71,36 @@ export async function extendGivenContext(
   }
 }
 
-export const vectorStore = new MongoDBAtlasVectorSearch(defaultEmbeddingModel, {
-  //@ts-ignore
-  collection: collection as Collection<Document>,
-  indexName: "vector_index",
-  textKey: "text",
-  embeddingKey: "embedding",
-});
+export const documentVectorStore = new MongoDBAtlasVectorSearch(
+  defaultEmbeddingModel,
+  {
+    //@ts-ignore
+    collection: documentCollection as Collection<Document>,
+    indexName: "vector_index",
+    textKey: "text",
+    embeddingKey: "embedding",
+  },
+);
 
+export const hierarchyVectorStore = new MongoDBAtlasVectorSearch(
+  defaultEmbeddingModel,
+  {
+    //@ts-ignore
+    collection: hierarchyCollection as Collection<Document>,
+    indexName: "vector_index",
+    textKey: "text",
+    embeddingKey: "embedding",
+  },
+);
 export async function getAllDocuments() {
   const client = new MongoClient(MONGO_URI);
 
   try {
     await client.connect();
 
-    const collection = client.db(DATABASE_NAME).collection(COLLECTION_NAME);
+    const collection = client
+      .db(DATABASE_NAME)
+      .collection(DOCUMENT_COLLECTION_NAME);
 
     const documents = await collection
       .find(
@@ -98,6 +118,45 @@ export async function getAllDocuments() {
       .toArray();
 
     return documents;
+  } finally {
+    await client.close();
+  }
+}
+
+export async function getAllHierarchyKeywords(): Promise<CodeContentResult[]> {
+  const client = new MongoClient(MONGO_URI);
+
+  try {
+    await client.connect();
+    const documents = await client
+      .db(DATABASE_NAME)
+      .collection(HIERARCHY_COLLECTION_NAME)
+      .find({}, {
+        projection: {
+          level: 1,
+          keywords: 1,
+          name: 1,
+          parentName: 1,
+          child: 1,
+          description: 1,
+        },
+      })
+      .toArray();
+
+    return documents.map((doc) => ({
+      content: {
+        id: doc._id,
+        level: doc.level,
+        keywords: Array.isArray(doc.keywords)
+          ? doc.keywords.filter((keyword: unknown): keyword is string => typeof keyword === "string")
+          : null,
+        score: 0,
+        name: doc.name,
+        parentName: doc.parentName ?? null,
+        child: doc.child ?? null,
+        description: doc.description ?? null,
+      },
+    }));
   } finally {
     await client.close();
   }

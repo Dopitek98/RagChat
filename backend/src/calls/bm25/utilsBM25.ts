@@ -1,6 +1,10 @@
 import type { ResultBm25 } from "../../types/types.js";
 import { bm25Search } from "../../retrival/utils.js";
-import { getAllDocuments } from "../../mongo/mongoClientFactory.js";
+import { rankHierarchyByKeywords } from "./hierarchyBM25.js";
+import {
+  getAllDocuments,
+  getAllHierarchyKeywords,
+} from "../../mongo/mongoClientFactory.js";
 
 export const returnTopFiveDocuments = async (state: any) => {
   const tempUploads: ResultBm25[] = [];
@@ -39,4 +43,9 @@ export const returnTopFiveDocuments = async (state: any) => {
   );
 
   return documentsByScore.sort((a, b) => b.score - a.score).slice(0, 5);
+};
+
+export const returnTopFourtyDocuments = async (state: { query: string }) => {
+  const documents = await getAllHierarchyKeywords();
+  return rankHierarchyByKeywords(documents, state.query);
 };

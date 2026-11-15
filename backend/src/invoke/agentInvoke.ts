@@ -8,6 +8,7 @@ import { randomUUID } from "crypto";
 import { hybridAgent } from "../stateGraphs/HybridGraph.js";
 import { agentDevGraph } from "../stateGraphs/agentDevGraph.js";
 import { TokenTracker } from "../tokenCounter/tokenTracer.js";
+import { agentCodeGraph } from "../stateGraphs/agentCodeGraph.js";
 
 //@ts-ignore
 const graphMap = new Map<string, StateGraph>();
@@ -102,6 +103,52 @@ export const sendDevMessageToAgent = async (
   return [
     JSON.stringify(reasoning || "no response"),
     JSON.stringify(response || "no response"),
+    threadId,
+    null,
+    { ...tracker.usage },
+  ];
+};
+
+export const sendCodeAnalystMessageToAgent = async (
+  userQuery: string,
+  searchType: string,
+  threadId: string = randomUUID(),
+) => {
+  const tracker = new TokenTracker();
+  const result = await agentCodeGraph.invoke(
+    {
+      messages: [new HumanMessage(userQuery)],
+    },
+    {
+      callbacks: [tracker],
+      configurable: {
+        thread_id: threadId,
+      },
+    },
+  );
+
+  const isInvestigation = result.classifications.some(
+    (classification: { source: string }) =>
+      classification.source === "extendAgentCall",
+  );
+  // const response = isInvestigation
+  //   ? result.investigationReportOutput
+  //   : result.finalOutput?.response;
+  // const reasoning = isInvestigation
+  //   ? result.sufficiencyReasoning
+  //   : result.finalOutput?.reasoning;
+
+  // await persistQueryResult(
+  //   JSON.stringify(response || "no response"),
+  //   JSON.stringify(reasoning || "no response"),
+  //   userQuery,
+  //   searchType,
+  //   threadId,
+  // );
+
+  return [
+    JSON.stringify(result.finalOutput?.reasoning || "no response"),
+    JSON.stringify(result.finalOutput?.response || "no response"),
     threadId,
     null,
     { ...tracker.usage },

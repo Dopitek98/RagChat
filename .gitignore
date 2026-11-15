@@ -6,6 +6,7 @@ embedding/node_modules/
 
 #Graphify
 graphify-out/
+embedding/graphifyGraph
 
 # Production build
 backend/dist/

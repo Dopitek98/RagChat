@@ -1,9 +1,14 @@
 import type { NavBarProps } from "../types/types";
-import Agent from "./Agent";
+import GraphifyAgent from "./GraphifyAgent";
+import JoernAgent from "./JoernAgent";
 import SearchTypes from "./searchTypes";
 
-function NavBar({ searchType, setSearchType, codeAnalysis, setCodeAnalysis }: NavBarProps) {
-
+function NavBar({
+  searchType,
+  setSearchType,
+  codeAnalysis,
+  setCodeAnalysis,
+}: NavBarProps) {
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
@@ -17,7 +22,18 @@ function NavBar({ searchType, setSearchType, codeAnalysis, setCodeAnalysis }: Na
         </div>
         <div className="ml-auto flex max-w-full min-w-0 items-center gap-2">
           <SearchTypes searchType={searchType} setSearchType={setSearchType} />
-          <Agent enabled={codeAnalysis} onChange={setCodeAnalysis} />
+          <GraphifyAgent
+            enabled={codeAnalysis === "graphify"}
+            onChange={() =>
+              setCodeAnalysis(codeAnalysis === "graphify" ? null : "graphify")
+            }
+          />
+          <JoernAgent
+            enabled={codeAnalysis === "joern"}
+            onChange={() =>
+              setCodeAnalysis(codeAnalysis === "joern" ? null : "joern")
+            }
+          />
         </div>
       </nav>
     </header>

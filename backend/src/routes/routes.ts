@@ -4,6 +4,7 @@ import { findHistory, findQueryResult } from "../mongo/mongoClientFactory.js";
 import {
   sendDevMessageToAgent,
   sendMessageToAgent,
+  sendCodeAnalystMessageToAgent,
 } from "../invoke/agentInvoke.js";
 
 const router = Router();
@@ -72,6 +73,25 @@ router.post("/dev", async (req: any, res: any) => {
     console.log("Received thread ID:", req.body.threadId);
 
     const result = await sendDevMessageToAgent(
+      req.body.query,
+      req.body.searchType,
+      req.body.threadId,
+    );
+
+    res.status(201).json(result);
+  } catch (error) {
+    console.error("Error occurred:", error);
+    res.status(500).json({ message: "Failed to send query" });
+  }
+});
+
+router.post("/codeanalyst", async (req: any, res: any) => {
+  try {
+    console.log("Received query:", req.body.query);
+    console.log("Received type of search:", req.body.searchType);
+    console.log("Received thread ID:", req.body.threadId);
+
+    const result = await sendCodeAnalystMessageToAgent(
       req.body.query,
       req.body.searchType,
       req.body.threadId,

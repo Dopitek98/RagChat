@@ -36,6 +36,24 @@ export const MessagesState = new StateSchema({
   finalOutput: AgentFinalOutput.optional(),
 });
 
+export const agentCodeState = new StateSchema({
+  messages: MessagesValue,
+  userQuery: z.string().describe("The original user query"),
+  searchQueries: z.array(z.string()).optional(),
+  retrievedContext: z.string().optional(),
+  classifications: z.array(
+    z.object({
+      source: z.enum(["answerUserQueryCall", "syntheziserCall"]),
+      query: z.string(),
+    }),
+  ),
+  combinedFinalOutput: new ReducedValue(
+    z.array(AgentFinalOutput).default(() => []),
+    { reducer: (current, update) => current.concat(update) },
+  ),
+  finalOutput: AgentFinalOutput.optional(),
+});
+
 export const queryExtenderOutput = z.object({
   searchQueries: z.array(z.string()).describe("Your extended user queries"),
 });
@@ -63,6 +81,17 @@ export const ClassificationAgentSchema = z.object({
     .array(
       z.object({
         source: z.enum(["answerUserQueryCall", "extendAgentCall"]),
+        query: z.string(),
+      }),
+    )
+    .describe("List of agents to invoke with their targeted sub-questions"),
+});
+
+export const CodeClassificationAgentSchema = z.object({
+  classifications: z
+    .array(
+      z.object({
+        source: z.enum(["answerUserQueryCall", "syntheziserCall"]),
         query: z.string(),
       }),
     )
@@ -122,7 +151,11 @@ export const investigationReportOutput = z.object({
 });
 
 export const investigationSufficiencyOutput = z.object({
-  sufficient: z.boolean().describe("Whether the developer's response meaningfully answers the user's request"),
+  sufficient: z
+    .boolean()
+    .describe(
+      "Whether the developer's response meaningfully answers the user's request",
+    ),
   reasoning: z.string().describe("Why the context is or is not sufficient"),
 });
 
@@ -146,11 +179,15 @@ export const AgentMessagesState = new StateSchema({
   ),
   finalOutput: AgentFinalOutput.optional(),
   investigationReportOutput: z.string().optional(),
-  investigationSteps: z.array(z.object({
-    query: z.string(),
-    handoff: z.string(),
-    developerResponse: z.string().optional(),
-    evaluation: investigationSufficiencyOutput.optional(),
-  })).default(() => []),
+  investigationSteps: z
+    .array(
+      z.object({
+        query: z.string(),
+        handoff: z.string(),
+        developerResponse: z.string().optional(),
+        evaluation: investigationSufficiencyOutput.optional(),
+      }),
+    )
+    .default(() => []),
   graphifyOutput: z.string().optional(),
 });

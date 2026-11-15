@@ -3,6 +3,7 @@ import {
   AgentFinalOutput,
   ClassificationResultSchema,
   ClassificationAgentSchema,
+  CodeClassificationAgentSchema,
   queryExtenderOutput,
   investigationExtenderOutput,
   investigationSufficiencyOutput,
@@ -21,6 +22,7 @@ const DEFAULT_BASE_URL =
   process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
 const DEFAULT_DIMENSIONS = 1024;
 const DEFAULT_EMBEDDING_MODEL = "qwen3-embedding:latest";
+const VERIFIED_PAY_MODEL = "openai/gpt-4o-mini";
 
 export const defaultStructuredModel = new ChatOllama({
   model: DEFAULT_MODEL,
@@ -40,6 +42,12 @@ export const defaultAgentClassifyModel = new ChatOllama({
   baseUrl: DEFAULT_BASE_URL,
 }).withStructuredOutput(ClassificationAgentSchema);
 
+export const defaultCodeAgentClassifyModel = new ChatOllama({
+  model: DEFAULT_MODEL,
+  temperature: DEFAULT_TEMPERATURE,
+  baseUrl: DEFAULT_BASE_URL,
+}).withStructuredOutput(CodeClassificationAgentSchema);
+
 export const defaultFinalOutputModel = new ChatOllama({
   model: DEFAULT_MODEL,
   temperature: DEFAULT_TEMPERATURE,
@@ -48,7 +56,7 @@ export const defaultFinalOutputModel = new ChatOllama({
 
 //api key set in env is needed
 export const defaultInvestigationChatModel = new ChatOpenRouter({
-  model: "openai/gpt-4o-mini",
+  model: VERIFIED_PAY_MODEL,
   temperature: 0,
 }).withStructuredOutput(investigationExtenderOutput);
 
@@ -86,7 +94,7 @@ export const defaultEmbeddingModel = new OllamaEmbeddings({
 // });
 
 export const defaultPaidChatModel = new ChatOpenRouter({
-  model: "openai/gpt-4o-mini",
+  model: VERIFIED_PAY_MODEL,
   temperature: 0,
 });
 

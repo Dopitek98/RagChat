@@ -1,10 +1,5 @@
-import type { HybridDocument, Result, ResultBm25 } from "../../types/types.js";
-
 const DEFAULT_RRF_K = 60;
 const DEFAULT_SEMANTIC_RATIO = 0.5;
-
-const getDocumentKey = (source: string, fromLine: number, toLine: number) =>
-  `${source}:${fromLine}:${toLine}`;
 
 const normalizeRatios = (semanticRatio?: number) => {
   const semantic =
@@ -20,76 +15,60 @@ const normalizeRatios = (semanticRatio?: number) => {
   };
 };
 
-export const buildRrfTopDocuments = (
-  semanticDocuments: Result[],
-  bm25Documents: ResultBm25[],
-  semanticRatio?: number,
-) => {
-  const ratios = normalizeRatios(semanticRatio);
-  const documentsByKey = new Map<string, HybridDocument>();
+export const buildRrfTopDocuments = <T>(
+  semanticDocuments: readonly T[],
+  bm25Documents: readonly T[],
+  options: {
+    getKey: (document: T) => string;
+    getScore: (document: T) => number;
+    withScore: (document: T, score: number) => T;
+    semanticRatio?: number;
+    limit?: number;
+    merge?: (semantic: T, bm25: T) => T;
+  },
+): T[] => {
+  const ratios = normalizeRatios(options.semanticRatio);
+  const documentsByKey = new Map<
+    string,
+    { document: T; semanticRank?: number; bm25Rank?: number }
+  >();
 
-  semanticDocuments
-    .slice()
-    .sort((a, b) => b.score - a.score)
-    .forEach((item, index) => {
-      const key = getDocumentKey(item.source, item.fromLine, item.toLine);
-      documentsByKey.set(key, {
-        source: item.source,
-        fromLine: item.fromLine,
-        toLine: item.toLine,
-        pageContent: item.pageContent,
-        semanticRank: index + 1,
-        score: 0,
-      });
-    });
-
-  bm25Documents
-    .slice()
-    .sort((a, b) => b.score - a.score)
-    .forEach((item, index) => {
-      const key = getDocumentKey(item.source, item.fromLine, item.toLine);
-      const existing = documentsByKey.get(key);
-
-      if (existing) {
-        existing.bm25Rank = index + 1;
-        if (!existing.pageContent && item.pageContent) {
-          existing.pageContent = item.pageContent;
+  const rankDocuments = (documents: readonly T[], source: "semantic" | "bm25") => {
+    const seen = new Set<string>();
+    let rank = 0;
+    [...documents]
+      .sort((a, b) => options.getScore(b) - options.getScore(a))
+      .forEach((document) => {
+        const key = options.getKey(document);
+        if (seen.has(key)) return;
+        seen.add(key);
+        rank++;
+        const existing = documentsByKey.get(key);
+        if (existing) {
+          if (source === "bm25") {
+            existing.bm25Rank = rank;
+            if (options.merge) existing.document = options.merge(existing.document, document);
+          }
+          return;
         }
-        return;
-      }
-
-      documentsByKey.set(key, {
-        source: item.source,
-        fromLine: item.fromLine,
-        toLine: item.toLine,
-        pageContent: item.pageContent,
-        bm25Rank: index + 1,
-        score: 0,
+        documentsByKey.set(key, {
+          document,
+          ...(source === "semantic" ? { semanticRank: rank } : { bm25Rank: rank }),
+        });
       });
-    });
+  };
 
-  const scoredDocuments = Array.from(documentsByKey.values()).map((item) => {
-    const semanticPart = item.semanticRank
-      ? ratios.semantic * (1 / (DEFAULT_RRF_K + item.semanticRank))
-      : 0;
-    const bm25Part = item.bm25Rank
-      ? ratios.bm25 * (1 / (DEFAULT_RRF_K + item.bm25Rank))
-      : 0;
+  rankDocuments(semanticDocuments, "semantic");
+  rankDocuments(bm25Documents, "bm25");
 
-    return {
-      ...item,
-      score: semanticPart + bm25Part,
-    };
-  });
-
-  return scoredDocuments
+  return [...documentsByKey.values()]
+    .map(({ document, semanticRank, bm25Rank }) => ({
+      document,
+      score:
+        (semanticRank ? ratios.semantic / (DEFAULT_RRF_K + semanticRank) : 0) +
+        (bm25Rank ? ratios.bm25 / (DEFAULT_RRF_K + bm25Rank) : 0),
+    }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
-    .map((item) => ({
-      source: item.source,
-      pageContent: item.pageContent,
-      score: item.score,
-      fromLine: item.fromLine,
-      toLine: item.toLine,
-    }));
+    .slice(0, options.limit ?? 5)
+    .map(({ document, score }) => options.withScore(document, score));
 };
