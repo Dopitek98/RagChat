@@ -191,6 +191,7 @@ export async function getAllHierarchyKeywords(): Promise<CodeContentResult[]> {
             parentName: 1,
             child: 1,
             description: 1,
+            source: 1,
           },
         },
       )
@@ -211,6 +212,7 @@ export async function getAllHierarchyKeywords(): Promise<CodeContentResult[]> {
         parentName: doc.parentName ?? null,
         child: doc.child ?? null,
         description: doc.description ?? null,
+        source: doc.source ?? null,
       },
     }));
   } finally {

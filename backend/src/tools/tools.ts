@@ -8,6 +8,11 @@ import { ChatOpenRouter } from "@langchain/openrouter";
 import { z } from "zod";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import {
+  queryJoern,
+  queryJoernForClassMethods,
+  toJoernFilePattern,
+} from "./joernTools.js";
 
 const TOKEN_BUDGET = 10000;
 const GRAPHIFY_MCP_URL = "http://localhost:8080/mcp";
@@ -108,3 +113,155 @@ function createReadFileTool(
 }
 
 export const toolRead = createReadFileTool();
+
+export const joernToolRead = createReadFileTool(
+  "C:\\opensource\\jenkins\\core\\src\\main\\java",
+);
+
+export const joernListClassMethodsTool = tool(
+  async ({ className }) =>
+    JSON.stringify(
+      await queryJoernForClassMethods(
+        className,
+        `cpg.typeDecl.name(placeholder).method.filterNot(el => Set("<clinit>","<init>").contains(el.name)).toSet.map(el => (el.name, el.filename,el.lineNumber,el.lineNumberEnd)).l`,
+      ),
+      null,
+      2,
+    ),
+  {
+    name: "joern_list_class_methods",
+    description:
+      "List methods declared by a class in the Joern code property graph, " +
+      "excluding constructors and class initializers. Returns method name, source file, start line, and end line.",
+    schema: z.object({
+      className: z
+        .string()
+        .min(1)
+        .max(256)
+        .describe("Exact class or type declaration name to look up in Joern"),
+    }),
+  },
+);
+
+export const joernListClassMethodsWithCallersTool = tool(
+  async ({ className }) =>
+    JSON.stringify(
+      await queryJoernForClassMethods(
+        className,
+        `cpg.typeDecl.name(placeholder).method.repeat(_.caller)(_.emit.maxDepth(5)).toSet.map(el => (el.name, el.filename,el.lineNumber,el.lineNumberEnd)).l`,
+      ),
+      null,
+      2,
+    ),
+  {
+    name: "joern_list_class_methods_with_callers_of_it_deepth_5",
+    description:
+      "List class methods and caller methods reachable up to five levels deep in the Joern code property graph. Returns method name, source file, start line, and end line.",
+    schema: z.object({
+      className: z
+        .string()
+        .min(1)
+        .max(256)
+        .describe("Exact class or type declaration name to look up in Joern"),
+    }),
+  },
+);
+
+export const joernFindMethodCallersDeepth5Tool = tool(
+  async ({ methodName }) =>
+    JSON.stringify(
+      await queryJoernForClassMethods(
+        `.*${methodName}.*`,
+        `cpg.method.code(placeholder).repeat(_.callIn.method)(_.emit.maxDepth(5)).toSet.map(el => (el.name, el.filename,el.lineNumber,el.lineNumberEnd)).l`,
+      ),
+      null,
+      2,
+    ),
+  {
+    name: "joern_find_method_callers_depth_5",
+    description:
+      "Find where a method is called in the Joern code property graph, following incoming calls up to five levels deep. Returns method name, source file, start line, and end line.",
+    schema: z.object({
+      methodName: z
+        .string()
+        .min(1)
+        .max(256)
+        .describe("Method name or code fragment to search for in Joern"),
+    }),
+  },
+);
+
+export const joernDumpMethodCodeTool = tool(
+  async ({ method_name, filepath }) => {
+    const methodPattern = `.*${method_name}.*`;
+    const filePattern = toJoernFilePattern(filepath);
+    const query =
+      `cpg.method.name(${JSON.stringify(methodPattern)})` +
+      `.filename(${JSON.stringify(filePattern)}).dumpRaw`;
+
+    return await queryJoern(query);
+  },
+  {
+    name: "joern_dump_method_code",
+    description:
+      "Dump raw source code for methods whose names contain the given method name and whose source file matches the provided path. The file path is converted to a Joern regex; returns Joern's raw method dump.",
+    schema: z.object({
+      method_name: z
+        .string()
+        .max(256)
+        .describe("Method name or empty string to search for in Joern"),
+      filepath: z
+        .string()
+        .min(1)
+        .max(4096)
+        .describe("Source file path, converted to a Joern file pattern"),
+    }),
+  },
+);
+
+export const joernGetParentMethodContainingCallTool = tool(
+  async ({ callCode }) =>
+    JSON.stringify(
+      await queryJoernForClassMethods(
+        `.*${callCode}.*`,
+        `cpg.call.code(placeholder).repeat(_.astParent)(_.until(_.isMethod)).isMethod.toSet.map(el => (el.name, el.filename,el.lineNumber,el.lineNumberEnd)).l`,
+      ),
+      null,
+      2,
+    ),
+  {
+    name: "joern_get_parent_method_containing_call",
+    description:
+      "Find the parent method containing a call with the given code in the Joern code property graph. Pass raw code or message text without surrounding quotes; it is searched as a substring. Returns method name, source file, start line, and end line.",
+    schema: z.object({
+      callCode: z
+        .string()
+        .min(1)
+        .max(4096)
+        .describe("Call code or message text to search for in Joern"),
+    }),
+  },
+);
+export const joernFindMethodsIncludingLiteralTool = tool(
+  async ({ literal }) =>
+    JSON.stringify(
+      await queryJoernForClassMethods(
+        `.*${literal}.*`,
+        `cpg.fieldIdentifier.filter(f => cpg.literal.code(placeholder).inCall.name("<operator>.assignment").argument(1).ast.isFieldIdentifier.canonicalName.l.distinct.contains(f.canonicalName)).method.repeat(_.caller)(_.emit.maxDepth(4)).filterNot(_.name == "<clinit>").toSet.map(el => Map("name" -> el.name,"filename" -> el.filename,"lineNumber" -> el.lineNumber,"lineNumberEnd" -> el.lineNumberEnd)).l`,
+      ),
+      null,
+      2,
+    ),
+  {
+    name: "joern_find_methods_including_literal",
+    description:
+      "Find methods associated with a field assigned the exact given string literal, plus caller methods up to three levels deep. Pass the literal value without surrounding quotes; the tool adds query quoting itself. Excludes class initializers and returns method name, source file, start line, and end line. It may take some time to run, depending on the size of the codebase and the number of matches.",
+    schema: z.object({
+      literal: z
+        .string()
+        .min(1)
+        .max(4096)
+        .describe("String literal value, without surrounding quotes"),
+    }),
+  },
+);

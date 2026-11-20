@@ -83,6 +83,7 @@ export const findObjectsBySimilaritySearch = async (
         description: doc.metadata.description ?? null,
         type: doc.metadata.type ?? null,
         relatedClasses: doc.metadata.relatedClasses ?? null,
+        source: doc.metadata.source ?? null,
       },
     });
   });

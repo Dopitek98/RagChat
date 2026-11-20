@@ -7,13 +7,26 @@ import {
   queryExtenderOutput,
   investigationExtenderOutput,
   investigationSufficiencyOutput,
+  joernAgentAnswerSchema,
 } from "../schema/messagesSchema.js";
 import { ChatOpenRouter } from "@langchain/openrouter";
-import { createAgent } from "langchain";
-import { toolRead, wrappedTools } from "../tools/tools.js";
+import { createAgent, toolCallLimitMiddleware } from "langchain";
+import {
+  joernFindMethodsIncludingLiteralTool,
+  joernGetParentMethodContainingCallTool,
+  joernListClassMethodsTool,
+  joernListClassMethodsWithCallersTool,
+  toolRead,
+  joernToolRead,
+  wrappedTools,
+  joernFindMethodCallersDeepth5Tool,
+  joernDumpMethodCodeTool,
+} from "../tools/tools.js";
 import { investigationReportOutput } from "../schema/messagesSchema.js";
 import { softwareDeveloperAnalyzePrompt } from "../prompt/softwareDeveloperAnalyzePrompt.js";
 import { graphifyInvestigationAssistant } from "../prompt/graphifyInvestigationAssistant.js";
+import { joernAnalyzePrompt } from "../prompt/joernAnalyzePrompt.js";
+import { joernSoftwareDeveloperPrompt } from "../prompt/joernSoftwareDeveloperPrompt.js";
 
 // const DEFAULT_MODEL = "gemma4:12b";
 const DEFAULT_MODEL = "qwen3.5:9b";
@@ -112,4 +125,31 @@ export const softwareDeveloperAnalystAgent = createAgent({
   tools: [toolRead],
   // responseFormat: investigationReportOutput,
   systemPrompt: softwareDeveloperAnalyzePrompt(),
+});
+
+export const joernAnalystAgent = createAgent({
+  model: defaultChatModel,
+  tools: [
+    joernListClassMethodsTool,
+    joernListClassMethodsWithCallersTool,
+    joernFindMethodCallersDeepth5Tool,
+    joernGetParentMethodContainingCallTool,
+    joernFindMethodsIncludingLiteralTool,
+  ],
+  systemPrompt: joernAnalyzePrompt(),
+  responseFormat: joernAgentAnswerSchema,
+});
+
+export const joernSoftwareDeveloperAgent = createAgent({
+  model: defaultChatModel,
+  tools: [joernDumpMethodCodeTool, joernToolRead],
+  systemPrompt: joernSoftwareDeveloperPrompt(),
+  responseFormat: joernAgentAnswerSchema,
+  middleware: [
+    toolCallLimitMiddleware({
+      toolName: "read_file",
+      runLimit: 7,
+      exitBehavior: "continue",
+    }),
+  ],
 });

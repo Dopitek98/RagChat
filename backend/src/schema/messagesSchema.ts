@@ -13,7 +13,8 @@ const codeContentResultSchema: z.ZodType<CodeContentResult> = z.object({
     parentName: z.string().nullable(),
     child: z.array(z.instanceof(ObjectId)).nullable(),
     description: z.string().nullable(),
-    type: z.string().nullable(),
+    type: z.string().nullable().optional(),
+    source: z.string().nullable(),
     relatedClasses: z
       .array(
         z.object({
@@ -25,6 +26,20 @@ const codeContentResultSchema: z.ZodType<CodeContentResult> = z.object({
       )
       .optional(),
   }),
+});
+
+export const retrievedContextAnswersSchema = z.object({
+  answer: z.string().nullable(),
+  retrievedContext: codeContentResultSchema.optional(),
+});
+
+export const joernAgentAnswerSchema = z.object({
+  answer: z.string().nullable(),
+});
+
+export const retrievedSoftwareContextAnswersSchema = z.object({
+  answer: z.string().nullable(),
+  retrievedContext: retrievedContextAnswersSchema.optional(),
 });
 
 export const AgentFinalOutput = z.object({
@@ -67,9 +82,18 @@ export const agentCodeState = new StateSchema({
   userQuery: z.string().describe("The original user query"),
   searchQueries: z.array(z.string()).optional(),
   retrievedContext: z.array(codeContentResultSchema).optional(),
+  isDirectJoernRequest: z.boolean().optional(),
+  retrievedContextAnswers: z.array(retrievedContextAnswersSchema).optional(),
+  retrievedSoftwareContextAnswersSchema: z
+    .array(retrievedSoftwareContextAnswersSchema)
+    .optional(),
   classifications: z.array(
     z.object({
-      source: z.enum(["answerUserQueryCall", "syntheziserCall"]),
+      source: z.enum([
+        "answerUserQueryCall",
+        "syntheziserCall",
+        "joernCodeAnalystCall",
+      ]),
       query: z.string(),
     }),
   ),
@@ -117,7 +141,11 @@ export const CodeClassificationAgentSchema = z.object({
   classifications: z
     .array(
       z.object({
-        source: z.enum(["answerUserQueryCall", "syntheziserCall"]),
+        source: z.enum([
+          "answerUserQueryCall",
+          "syntheziserCall",
+          "joernCodeAnalystCall",
+        ]),
         query: z.string(),
       }),
     )

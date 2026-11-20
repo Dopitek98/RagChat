@@ -131,6 +131,14 @@ export const sendCodeAnalystMessageToAgent = async (
     (classification: { source: string }) =>
       classification.source === "extendAgentCall",
   );
+  const softwareContextAnswers =
+    result.retrievedSoftwareContextAnswersSchema ?? [];
+  const response = softwareContextAnswers.length
+    ? softwareContextAnswers.map(({ answer }) => answer)
+    : result.finalOutput?.response;
+  const reasoning = softwareContextAnswers.length
+    ? softwareContextAnswers.map(({ retrievedContext }) => retrievedContext)
+    : result.finalOutput?.reasoning;
   // const response = isInvestigation
   //   ? result.investigationReportOutput
   //   : result.finalOutput?.response;
@@ -147,8 +155,8 @@ export const sendCodeAnalystMessageToAgent = async (
   // );
 
   return [
-    JSON.stringify(result.finalOutput?.reasoning || "no response"),
-    JSON.stringify(result.finalOutput?.response || "no response"),
+    JSON.stringify(reasoning || "no response"),
+    JSON.stringify(response || "no response"),
     threadId,
     null,
     { ...tracker.usage },

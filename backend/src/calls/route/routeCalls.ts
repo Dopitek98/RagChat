@@ -16,6 +16,8 @@ export function routeToAgents(
     (c) =>
       new Send(c.source, {
         query: c.query,
+        userQuery: state.userQuery,
+        isDirectJoernRequest: c.source === "joernCodeAnalystCall",
         combinedFinalOutput: state.combinedFinalOutput,
       }),
   );

@@ -170,39 +170,37 @@ export const syntheziserCodeHybridCall = async (state: any) => {
 
   console.log("topHybridDocuments", topHybridDocumentsWithRelatedClasses);
 
-  const retrievedContext = topHybridDocumentsWithRelatedClasses
-    .map((item) =>
-      JSON.stringify({
-        name: item.content.name,
-        description: item.content.description,
-        score: item.content.score,
-        type: item.content.type,
-        relatedClasses: item.content.relatedClasses,
-      }),
-    )
-    .join("\n");
+  //   const retrievedContext = topHybridDocumentsWithRelatedClasses
+  //     .map((item) =>
+  //       JSON.stringify({
+  //         name: item.content.name,
+  //         description: item.content.description,
+  //         score: item.content.score,
+  //         type: item.content.type,
+  //         relatedClasses: item.content.relatedClasses,
+  //       }),
+  //     )
+  //     .join("\n");
 
-  const response = await defaultFinalOutputModel.invoke([
-    new SystemMessage(`
-    You are a helpful assistant that provides answers to user queries based on the provided context. Use the context to generate a comprehensive and accurate response to the user's question.
-      `),
-    new HumanMessage(`
-## User's question:
-${state.userQuery ?? "No user query provided."}
+  //   const response = await defaultFinalOutputModel.invoke([
+  //     new SystemMessage(`
+  //     You are a helpful assistant that provides answers to user queries based on the provided context. Use the context to generate a comprehensive and accurate response to the user's question.
+  //       `),
+  //     new HumanMessage(`
+  // ## User's question:
+  // ${state.userQuery ?? "No user query provided."}
 
-## Available Context
-${JSON.stringify(retrievedContext, null, 2)}
-        `),
-  ]);
+  // ## Available Context
+  // ${JSON.stringify(retrievedContext, null, 2)}
+  //         `),
+  //   ]);
 
-  const finalOutput = {
-    response: response.response,
-    reasoning: response.reasoning,
-  };
+  //   const finalOutput = {
+  //     response: response.response,
+  //     reasoning: response.reasoning,
+  //   };
 
   return {
-    topHybridDocuments: topHybridDocumentsWithRelatedClasses,
-    combinedFinalOutput: [finalOutput],
-    finalOutput,
+    retrievedContext: topHybridDocumentsWithRelatedClasses,
   };
 };

@@ -22,6 +22,7 @@ export type CodeContentResult = {
     description: string | null;
     relatedClasses?: RelatedClass[];
     type?: string | null;
+    source?: string | null;
   };
 };
 

@@ -10,6 +10,8 @@ import { Send } from "@langchain/langgraph";
 import { classifyCodeAgentCall } from "../calls/classify/classifyAgentCall.js";
 import { routeToAgents } from "../calls/route/routeCalls.js";
 import { syntheziserCodeHybridCall } from "../calls/hybrid/syntheziserHybrid.js";
+import { joernCodeAnalystCall } from "../calls/code/joernCodeAnalystCall.js";
+import { joernSofwareDeveloperCall } from "../calls/code/joernSofwareDeveloperCall.js";
 
 const checkpointer = memoryCheckpointer;
 
@@ -26,13 +28,18 @@ function routeToDevAgents(state: typeof AgentMessagesState.State): Send[] {
 export const agentCodeGraph = new StateGraph(agentCodeState)
   .addNode("classifyAgentCall", classifyCodeAgentCall)
   .addNode("syntheziserCall", syntheziserCodeHybridCall)
+  .addNode("joernCodeAnalystCall", joernCodeAnalystCall)
+  .addNode("joernSofwareDeveloperCall", joernSofwareDeveloperCall)
   .addNode("answerUserQueryCall", answerUserQueryCall)
   .addEdge(START, "classifyAgentCall")
   .addConditionalEdges("classifyAgentCall", routeToAgents, [
     "syntheziserCall",
+    "joernCodeAnalystCall",
     "answerUserQueryCall",
   ])
-  .addEdge("syntheziserCall", END)
+  .addEdge("syntheziserCall", "joernCodeAnalystCall")
+  .addEdge("joernCodeAnalystCall", "joernSofwareDeveloperCall")
+  .addEdge("joernSofwareDeveloperCall", END)
   .addEdge("answerUserQueryCall", END)
   .compile({ checkpointer });
 
