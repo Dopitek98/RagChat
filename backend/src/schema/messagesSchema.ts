@@ -77,12 +77,29 @@ export const MessagesState = new StateSchema({
   finalOutput: AgentFinalOutput.optional(),
 });
 
+export const focusedJoernAssessmentSchema = z.object({
+  sufficient: z.boolean(),
+  reasoning: z.string().min(1),
+  answer: z.string().min(1),
+  nextLookup: z.string().nullable(),
+});
+
+export const focusedJoernStepSchema = z.object({
+  lookup: z.string(),
+  handoff: z.string().nullable(),
+  error: z.string().optional(),
+  assessment: focusedJoernAssessmentSchema.optional(),
+});
+
 export const agentCodeState = new StateSchema({
   messages: MessagesValue,
   userQuery: z.string().describe("The original user query"),
   searchQueries: z.array(z.string()).optional(),
   retrievedContext: z.array(codeContentResultSchema).optional(),
   isDirectJoernRequest: z.boolean().optional(),
+  focusedJoernSteps: z.array(focusedJoernStepSchema).default(() => []),
+  focusedJoernNextLookup: z.string().optional(),
+  focusedJoernSufficient: z.boolean().default(false),
   retrievedContextAnswers: z.array(retrievedContextAnswersSchema).optional(),
   retrievedSoftwareContextAnswersSchema: z
     .array(retrievedSoftwareContextAnswersSchema)

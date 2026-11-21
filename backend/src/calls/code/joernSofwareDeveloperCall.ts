@@ -16,7 +16,7 @@ export const joernSofwareDeveloperCall = async (
           role: "human",
           content: [
             `User request:\n${state.userQuery}`,
-            "Analyze the following Joern analyst handoff. Verify relevant methods by retrieving their source with the available tool.",
+            "Analyze the following Joern analyst handoff. Verify relevant methods by reading their source files with read_file, using the reported filenames or paths.",
             `Joern analyst handoff:\n${JSON.stringify(analystAnswer)}`,
           ].join("\n\n"),
         },
@@ -29,6 +29,11 @@ export const joernSofwareDeveloperCall = async (
       retrievedContext: analystAnswer,
     });
   }
+
+  console.log(
+    "retrievedSoftwareContextAnswersSchema:",
+    JSON.stringify(retrievedSoftwareContextAnswersSchema),
+  );
 
   return { retrievedSoftwareContextAnswersSchema };
 };

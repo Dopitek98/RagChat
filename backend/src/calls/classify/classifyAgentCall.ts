@@ -21,6 +21,13 @@ export const classifyCodeAgentCall = async (state: any) => {
   return {
     classifications: response.classifications,
     userQuery: state.messages[state.messages.length - 1].content,
+    isDirectJoernRequest: response.classifications.some(
+      (classification: { source: string }) => classification.source === "joernCodeAnalystCall",
+    ),
+    focusedJoernSteps: [],
+    focusedJoernNextLookup: "",
+    focusedJoernSufficient: false,
+    retrievedSoftwareContextAnswersSchema: [],
   };
 };
 

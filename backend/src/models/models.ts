@@ -8,6 +8,7 @@ import {
   investigationExtenderOutput,
   investigationSufficiencyOutput,
   joernAgentAnswerSchema,
+  focusedJoernAssessmentSchema,
 } from "../schema/messagesSchema.js";
 import { ChatOpenRouter } from "@langchain/openrouter";
 import { createAgent, toolCallLimitMiddleware } from "langchain";
@@ -27,16 +28,17 @@ import { softwareDeveloperAnalyzePrompt } from "../prompt/softwareDeveloperAnaly
 import { graphifyInvestigationAssistant } from "../prompt/graphifyInvestigationAssistant.js";
 import { joernAnalyzePrompt } from "../prompt/joernAnalyzePrompt.js";
 import { joernSoftwareDeveloperPrompt } from "../prompt/joernSoftwareDeveloperPrompt.js";
+import { joernReadOnlySoftwareDeveloperPrompt } from "../prompt/joernReadOnlySoftwareDeveloperPrompt.js";
 
-// const DEFAULT_MODEL = "gemma4:12b";
-const DEFAULT_MODEL = "qwen3.5:9b";
+const DEFAULT_MODEL = "qwen3.8:latest";
+//const DEFAULT_MODEL = "qwen3.5:9b";
 const DEFAULT_TEMPERATURE = 0;
 const DEFAULT_BASE_URL =
   process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
 const DEFAULT_DIMENSIONS = 1024;
 const DEFAULT_EMBEDDING_MODEL = "qwen3-embedding:latest";
-const VERIFIED_PAY_MODEL = "openai/gpt-4o-mini";
-
+//const VERIFIED_PAY_MODEL = "openai/gpt-4o-mini";
+const VERIFIED_PAY_MODEL = "deepseek/deepseek-v4.1-flash";
 export const defaultStructuredModel = new ChatOllama({
   model: DEFAULT_MODEL,
   temperature: DEFAULT_TEMPERATURE,
@@ -138,6 +140,21 @@ export const joernAnalystAgent = createAgent({
   ],
   systemPrompt: joernAnalyzePrompt(),
   responseFormat: joernAgentAnswerSchema,
+});
+
+//joernDumpMethodCodeTool
+export const focusedJoernSoftwareDeveloperAgent = createAgent({
+  model: defaultPaidChatModel,
+  tools: [joernToolRead],
+  systemPrompt: joernReadOnlySoftwareDeveloperPrompt(),
+  responseFormat: focusedJoernAssessmentSchema,
+  middleware: [
+    toolCallLimitMiddleware({
+      toolName: "read_file",
+      runLimit: 7,
+      exitBehavior: "continue",
+    }),
+  ],
 });
 
 export const joernSoftwareDeveloperAgent = createAgent({

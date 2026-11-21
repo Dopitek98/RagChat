@@ -47,75 +47,68 @@ async function createWrappedTools() {
 
 export const wrappedTools = await createWrappedTools();
 
-function createReadFileTool(
-  projectRoot = "C:\\Users\\Michał\\Desktop\\AIJS\\ragChat",
-) {
+async function readProjectFile(projectRoot: string, filePath: string) {
   const root = path.resolve(projectRoot);
 
-  return tool(
-    async ({ filePath }) => {
-      try {
-        // Accept both relative paths and absolute paths within the project root.
-        const resolvedPath = path.resolve(root, filePath);
-        const relativePath = path.relative(root, resolvedPath);
+  try {
+    const resolvedPath = path.resolve(root, filePath);
+    const relativePath = path.relative(root, resolvedPath);
 
-        // Reject paths outside the project root.
-        if (relativePath === ".." || relativePath.startsWith(`..${path.sep}`)) {
-          return "Error: path is outside the project directory.";
-        }
+    if (
+      relativePath === ".." ||
+      relativePath.startsWith(`..${path.sep}`) ||
+      path.isAbsolute(relativePath)
+    ) {
+      return "Error: path is outside the project directory.";
+    }
 
-        // Keep this first version simple: only regular files.
-        const stats = await fs.lstat(resolvedPath);
+    const stats = await fs.lstat(resolvedPath);
+    if (!stats.isFile()) {
+      return "Error: the requested path is not a regular file.";
+    }
 
-        if (!stats.isFile()) {
-          return "Error: the requested path is not a regular file.";
-        }
+    const maxBytes = 100_000;
+    if (stats.size > maxBytes) {
+      return `Error: file is too large (${stats.size} bytes). Maximum: ${maxBytes} bytes.`;
+    }
 
-        // Avoid accidentally loading huge files into the context.
-        const maxBytes = 100_000;
+    const content = await fs.readFile(resolvedPath, "utf8");
+    console.log("=====Content======");
+    // console.log(content);
+    // console.log("=====Content======");
+    return content;
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return "Error: file does not exist.";
+    }
 
-        if (stats.size > maxBytes) {
-          return `Error: file is too large (${stats.size} bytes). Maximum: ${maxBytes} bytes.`;
-        }
-        const content = await fs.readFile(resolvedPath, "utf8");
-        console.log("=====Content======");
-        console.log(content);
-        console.log("=====Content======");
-        return content;
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          "code" in error &&
-          error.code === "ENOENT"
-        ) {
-          return "Error: file does not exist.";
-        }
-
-        return `Error reading file: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`;
-      }
-    },
-    {
-      name: "read_file",
-      description:
-        "Read a UTF-8 text file from the project directory. " +
-        "Provide a relative or absolute path within the project root, such as src/index.ts or package.json. " +
-        "Use this tool to inspect source code before proposing changes.",
-      schema: z.object({
-        filePath: z
-          .string()
-          .min(1)
-          .describe("Relative or absolute path to a file within the project"),
-      }),
-    },
-  );
+    return `Error reading file: ${
+      error instanceof Error ? error.message : "Unknown error"
+    }`;
+  }
 }
 
-export const toolRead = createReadFileTool();
+const readFileToolOptions = {
+  name: "read_file",
+  description:
+    "Read a UTF-8 text file from the project directory. " +
+    "Provide a relative or absolute path within the project root, such as src/index.ts or package.json. " +
+    "Use this tool to inspect source code before proposing changes.",
+  schema: z.object({
+    filePath: z.string().min(1).describe("file path within the project"),
+  }),
+};
 
-export const joernToolRead = createReadFileTool(
-  "C:\\opensource\\jenkins\\core\\src\\main\\java",
+export const toolRead = tool(
+  async ({ filePath }) =>
+    readProjectFile("C:\\Users\\Michał\\Desktop\\AIJS\\ragChat", filePath),
+  readFileToolOptions,
+);
+
+export const joernToolRead = tool(
+  async ({ filePath }) =>
+    readProjectFile("C:\\opensource\\jenkins\\core\\src\\main\\java", filePath),
+  readFileToolOptions,
 );
 
 export const joernListClassMethodsTool = tool(
@@ -198,8 +191,12 @@ export const joernDumpMethodCodeTool = tool(
     const query =
       `cpg.method.name(${JSON.stringify(methodPattern)})` +
       `.filename(${JSON.stringify(filePattern)}).dumpRaw`;
+    const result = await queryJoern(query);
 
-    return await queryJoern(query);
+    console.log("=====Joern Dump Method Code Result======");
+    console.log(result);
+    console.log("=====Joern Dump Method Code Result======");
+    return result;
   },
   {
     name: "joern_dump_method_code",
@@ -243,19 +240,23 @@ export const joernGetParentMethodContainingCallTool = tool(
   },
 );
 export const joernFindMethodsIncludingLiteralTool = tool(
-  async ({ literal }) =>
-    JSON.stringify(
+  async ({ literal }) => {
+    const result = JSON.stringify(
       await queryJoernForClassMethods(
         `.*${literal}.*`,
         `cpg.fieldIdentifier.filter(f => cpg.literal.code(placeholder).inCall.name("<operator>.assignment").argument(1).ast.isFieldIdentifier.canonicalName.l.distinct.contains(f.canonicalName)).method.repeat(_.caller)(_.emit.maxDepth(4)).filterNot(_.name == "<clinit>").toSet.map(el => Map("name" -> el.name,"filename" -> el.filename,"lineNumber" -> el.lineNumber,"lineNumberEnd" -> el.lineNumberEnd)).l`,
       ),
       null,
       2,
-    ),
+    );
+    console.log(result);
+    return result;
+  },
   {
     name: "joern_find_methods_including_literal",
     description:
       "Find methods associated with a field assigned the exact given string literal, plus caller methods up to three levels deep. Pass the literal value without surrounding quotes; the tool adds query quoting itself. Excludes class initializers and returns method name, source file, start line, and end line. It may take some time to run, depending on the size of the codebase and the number of matches.",
+    returnDirect: true,
     schema: z.object({
       literal: z
         .string()

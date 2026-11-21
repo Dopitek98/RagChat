@@ -1,5 +1,5 @@
 const JOERN_BASE_URL = process.env.JOERN_BASE_URL ?? "http://localhost:8081";
-const JOERN_QUERY_TIMEOUT_MS = 50_000;
+const JOERN_QUERY_TIMEOUT_MS = 100_000;
 const JOERN_POLL_INTERVAL_MS = 250;
 
 export function scalaOutputToJson(output: string): Array<{
@@ -8,9 +8,9 @@ export function scalaOutputToJson(output: string): Array<{
   value: number | null;
   endLine: number | null;
 }> {
-  const tokens = output.match(
-    /"""[\s\S]*?"""|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|->|-?\d+|[()[\],=]/g,
-  );
+  const tokens = output
+    .replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "")
+    .match(/"""[\s\S]*?"""|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|->|-?\d+|[()[\],=]/g);
 
   if (!tokens) return [];
 
@@ -124,8 +124,12 @@ export function scalaOutputToJson(output: string): Array<{
     }
 
     expect(")");
-    if (method === undefined || signatureOrFile === undefined ||
-        value === undefined || endLine === undefined) {
+    if (
+      method === undefined ||
+      signatureOrFile === undefined ||
+      value === undefined ||
+      endLine === undefined
+    ) {
       throw new Error("Scala method map is missing required fields");
     }
     return { method, signatureOrFile, value, endLine };
