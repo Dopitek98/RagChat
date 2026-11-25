@@ -154,6 +154,105 @@ export function scalaOutputToJson(output: string): Array<{
   return results;
 }
 
+export function scalaOutputToLiteralDeclarations(output: string): Array<{
+  name: string;
+  stringDeclaration: string;
+  lineNumber: number | null;
+}> {
+  const tokens = output
+    .replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "")
+    .match(/"""[\s\S]*?"""|"(?:\\.|[^"\\])*"|[A-Za-z_]\w*|->|-?\d+|[()[\],=]/g);
+
+  if (!tokens) return [];
+
+  const parsedTokens = tokens;
+  const listIndex = tokens.findIndex(
+    (token, index) => token === "List" && tokens[index + 1] === "(",
+  );
+  if (listIndex === -1) throw new Error("Expected a Scala List result");
+
+  let pos = listIndex + 1;
+
+  function next() {
+    return parsedTokens[pos++];
+  }
+
+  function expect(token: string) {
+    const actual = next();
+    if (actual !== token) {
+      throw new Error(`Expected ${token}, got ${actual}`);
+    }
+  }
+
+  function parseString() {
+    const token = next();
+    if (token.startsWith('"""')) return token.slice(3, -3);
+    return JSON.parse(token);
+  }
+
+  function parseOption() {
+    const token = next();
+    if (token === "None") return null;
+    if (token === "Some") {
+      expect("(");
+      expect("value");
+      expect("=");
+      const value = Number(next());
+      expect(")");
+      return value;
+    }
+    throw new Error(`Unexpected option: ${token}`);
+  }
+
+  expect("(");
+  const results = [];
+
+  while (tokens[pos] !== ")") {
+    expect("Map");
+    expect("(");
+
+    let name: string | undefined;
+    let stringDeclaration: string | undefined;
+    let lineNumber: number | null | undefined;
+
+    while (tokens[pos] !== ")") {
+      const key = parseString();
+      expect("->");
+      switch (key) {
+        case "name":
+          name = parseString();
+          break;
+        case "stringDeclaration":
+          stringDeclaration = parseString();
+          break;
+        case "lineNumber":
+          lineNumber = parseOption();
+          break;
+        default:
+          throw new Error(`Unexpected declaration map key: ${key}`);
+      }
+      if (tokens[pos] !== ",") break;
+      next();
+    }
+
+    expect(")");
+    if (
+      name === undefined ||
+      stringDeclaration === undefined ||
+      lineNumber === undefined
+    ) {
+      throw new Error("Scala literal declaration map is missing required fields");
+    }
+
+    results.push({ name, stringDeclaration, lineNumber });
+    if (tokens[pos] === ",") next();
+    else break;
+  }
+
+  expect(")");
+  return results;
+}
+
 async function readJsonResponse(response: Response, operation: string) {
   const body = await response.text();
   if (!response.ok) {

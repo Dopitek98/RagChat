@@ -1,9 +1,5 @@
 import { MCPAdapter } from "@langchain/mcp-adapters";
-import { createAgent, SystemMessage, ToolMessage } from "langchain";
-import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
-import { ChatOllama } from "@langchain/ollama";
-import { ChatOpenRouter } from "@langchain/openrouter";
 
 import { z } from "zod";
 import * as fs from "node:fs/promises";
@@ -11,6 +7,7 @@ import * as path from "node:path";
 import {
   queryJoern,
   queryJoernForClassMethods,
+  scalaOutputToLiteralDeclarations,
   toJoernFilePattern,
 } from "./joernTools.js";
 
@@ -67,15 +64,13 @@ async function readProjectFile(projectRoot: string, filePath: string) {
       return "Error: the requested path is not a regular file.";
     }
 
-    const maxBytes = 100_000;
+    const maxBytes = 200_000;
     if (stats.size > maxBytes) {
       return `Error: file is too large (${stats.size} bytes). Maximum: ${maxBytes} bytes.`;
     }
 
     const content = await fs.readFile(resolvedPath, "utf8");
-    console.log("=====Content======");
-    // console.log(content);
-    // console.log("=====Content======");
+    console.log(`=====Reading ${filePath}======`);
     return content;
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT") {
@@ -241,11 +236,23 @@ export const joernGetParentMethodContainingCallTool = tool(
 );
 export const joernFindMethodsIncludingLiteralTool = tool(
   async ({ literal }) => {
-    const result = JSON.stringify(
-      await queryJoernForClassMethods(
-        `.*${literal}.*`,
+    const literalPattern = `.*${literal}.*`;
+    const [methods, declarationOutput] = await Promise.all([
+      queryJoernForClassMethods(
+        literalPattern,
         `cpg.fieldIdentifier.filter(f => cpg.literal.code(placeholder).inCall.name("<operator>.assignment").argument(1).ast.isFieldIdentifier.canonicalName.l.distinct.contains(f.canonicalName)).method.repeat(_.caller)(_.emit.maxDepth(4)).filterNot(_.name == "<clinit>").toSet.map(el => Map("name" -> el.name,"filename" -> el.filename,"lineNumber" -> el.lineNumber,"lineNumberEnd" -> el.lineNumberEnd)).l`,
       ),
+      queryJoern(
+        `cpg.literal.code(${JSON.stringify(literalPattern)}).astParent.isCall.map(el => Map("name" -> el.name,"stringDeclaration" -> el.code,"lineNumber" -> el.lineNumber)).l`,
+      ),
+    ]);
+
+    const result = JSON.stringify(
+      {
+        methods,
+        literalDeclarations:
+          scalaOutputToLiteralDeclarations(declarationOutput),
+      },
       null,
       2,
     );

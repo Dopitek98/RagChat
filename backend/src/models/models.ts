@@ -30,8 +30,8 @@ import { joernAnalyzePrompt } from "../prompt/joernAnalyzePrompt.js";
 import { joernSoftwareDeveloperPrompt } from "../prompt/joernSoftwareDeveloperPrompt.js";
 import { joernReadOnlySoftwareDeveloperPrompt } from "../prompt/joernReadOnlySoftwareDeveloperPrompt.js";
 
-const DEFAULT_MODEL = "qwen3.8:latest";
-//const DEFAULT_MODEL = "qwen3.5:9b";
+// const DEFAULT_MODEL = "qwen3.8:latest";
+const DEFAULT_MODEL = "qwen3.5:9b";
 const DEFAULT_TEMPERATURE = 0;
 const DEFAULT_BASE_URL =
   process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
@@ -142,7 +142,6 @@ export const joernAnalystAgent = createAgent({
   responseFormat: joernAgentAnswerSchema,
 });
 
-//joernDumpMethodCodeTool
 export const focusedJoernSoftwareDeveloperAgent = createAgent({
   model: defaultPaidChatModel,
   tools: [joernToolRead],
