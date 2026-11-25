@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 
-export type ContentResult = {
+export type DocumentContentResult = {
   content: {
     source: string;
     pageContent: string;
@@ -8,6 +8,29 @@ export type ContentResult = {
     fromLine: number;
     toLine: number;
   };
+};
+
+export type CodeContentResult = {
+  content: {
+    id: ObjectId;
+    level: number;
+    keywords: string[] | null;
+    score: number;
+    name: string;
+    parentName: string | null;
+    child: ObjectId[] | null;
+    description: string | null;
+    relatedClasses?: RelatedClass[];
+    type?: string | null;
+    source?: string | null;
+  };
+};
+
+export type RelatedClass = {
+  source: string | null;
+  name: string | null;
+  parentName: string | null;
+  description: string | null;
 };
 
 export type Result = {
@@ -57,7 +80,6 @@ export type MongoHistoryInput = {
   fromLine: number;
   toLine: number;
 };
-
 
 export type HybridDocument = {
   source: string;

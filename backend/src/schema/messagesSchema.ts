@@ -1,5 +1,46 @@
 import * as z from "zod";
 import { StateSchema, MessagesValue, ReducedValue } from "@langchain/langgraph";
+import { ObjectId } from "mongodb";
+import type { CodeContentResult } from "../types/types.js";
+
+const codeContentResultSchema: z.ZodType<CodeContentResult> = z.object({
+  content: z.object({
+    id: z.instanceof(ObjectId),
+    level: z.number(),
+    keywords: z.array(z.string()).nullable(),
+    score: z.number(),
+    name: z.string(),
+    parentName: z.string().nullable(),
+    child: z.array(z.instanceof(ObjectId)).nullable(),
+    description: z.string().nullable(),
+    type: z.string().nullable().optional(),
+    source: z.string().nullable(),
+    relatedClasses: z
+      .array(
+        z.object({
+          source: z.string().nullable(),
+          name: z.string().nullable(),
+          parentName: z.string().nullable(),
+          description: z.string().nullable(),
+        }),
+      )
+      .optional(),
+  }),
+});
+
+export const retrievedContextAnswersSchema = z.object({
+  answer: z.string().nullable(),
+  retrievedContext: codeContentResultSchema.optional(),
+});
+
+export const joernAgentAnswerSchema = z.object({
+  answer: z.string().nullable(),
+});
+
+export const retrievedSoftwareContextAnswersSchema = z.object({
+  answer: z.string().nullable(),
+  retrievedContext: retrievedContextAnswersSchema.optional(),
+});
 
 export const AgentFinalOutput = z.object({
   response: z
@@ -26,6 +67,50 @@ export const MessagesState = new StateSchema({
   classifications: z.array(
     z.object({
       source: z.enum(["answerUserQueryCall", "extendQueryCall"]),
+      query: z.string(),
+    }),
+  ),
+  combinedFinalOutput: new ReducedValue(
+    z.array(AgentFinalOutput).default(() => []),
+    { reducer: (current, update) => current.concat(update) },
+  ),
+  finalOutput: AgentFinalOutput.optional(),
+});
+
+export const focusedJoernAssessmentSchema = z.object({
+  sufficient: z.boolean(),
+  reasoning: z.string().min(1),
+  answer: z.string().min(1),
+  nextLookup: z.string().nullable(),
+});
+
+export const focusedJoernStepSchema = z.object({
+  lookup: z.string(),
+  handoff: z.string().nullable(),
+  error: z.string().optional(),
+  assessment: focusedJoernAssessmentSchema.optional(),
+});
+
+export const agentCodeState = new StateSchema({
+  messages: MessagesValue,
+  userQuery: z.string().describe("The original user query"),
+  searchQueries: z.array(z.string()).optional(),
+  retrievedContext: z.array(codeContentResultSchema).optional(),
+  isDirectJoernRequest: z.boolean().optional(),
+  focusedJoernSteps: z.array(focusedJoernStepSchema).default(() => []),
+  focusedJoernNextLookup: z.string().optional(),
+  focusedJoernSufficient: z.boolean().default(false),
+  retrievedContextAnswers: z.array(retrievedContextAnswersSchema).optional(),
+  retrievedSoftwareContextAnswersSchema: z
+    .array(retrievedSoftwareContextAnswersSchema)
+    .optional(),
+  classifications: z.array(
+    z.object({
+      source: z.enum([
+        "answerUserQueryCall",
+        "syntheziserCall",
+        "joernCodeAnalystCall",
+      ]),
       query: z.string(),
     }),
   ),
@@ -63,6 +148,21 @@ export const ClassificationAgentSchema = z.object({
     .array(
       z.object({
         source: z.enum(["answerUserQueryCall", "extendAgentCall"]),
+        query: z.string(),
+      }),
+    )
+    .describe("List of agents to invoke with their targeted sub-questions"),
+});
+
+export const CodeClassificationAgentSchema = z.object({
+  classifications: z
+    .array(
+      z.object({
+        source: z.enum([
+          "answerUserQueryCall",
+          "syntheziserCall",
+          "joernCodeAnalystCall",
+        ]),
         query: z.string(),
       }),
     )
@@ -122,7 +222,11 @@ export const investigationReportOutput = z.object({
 });
 
 export const investigationSufficiencyOutput = z.object({
-  sufficient: z.boolean().describe("Whether the developer's response meaningfully answers the user's request"),
+  sufficient: z
+    .boolean()
+    .describe(
+      "Whether the developer's response meaningfully answers the user's request",
+    ),
   reasoning: z.string().describe("Why the context is or is not sufficient"),
 });
 
@@ -146,11 +250,15 @@ export const AgentMessagesState = new StateSchema({
   ),
   finalOutput: AgentFinalOutput.optional(),
   investigationReportOutput: z.string().optional(),
-  investigationSteps: z.array(z.object({
-    query: z.string(),
-    handoff: z.string(),
-    developerResponse: z.string().optional(),
-    evaluation: investigationSufficiencyOutput.optional(),
-  })).default(() => []),
+  investigationSteps: z
+    .array(
+      z.object({
+        query: z.string(),
+        handoff: z.string(),
+        developerResponse: z.string().optional(),
+        evaluation: investigationSufficiencyOutput.optional(),
+      }),
+    )
+    .default(() => []),
   graphifyOutput: z.string().optional(),
 });

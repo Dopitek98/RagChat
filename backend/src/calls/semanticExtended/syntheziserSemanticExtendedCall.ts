@@ -4,12 +4,16 @@ import {
   defaultChatModel,
   defaultFinalOutputModel,
 } from "../../models/models.js";
-import type { ContentResult } from "../../types/types.js";
+import type {
+  CodeContentResult,
+  DocumentContentResult,
+} from "../../types/types.js";
 import {
   filterOutDuplicatesFromTopQueries,
   prepareDocumentBySimilaritySearch,
   groupAndMergeBySource,
   extendChunksWithMoreContext,
+  findObjectsBySimilaritySearch,
 } from "../../retrival/utils.js";
 import { DEFAULT_CHUNK_EXTENSION } from "../../mongo/mongoClientFactory.js";
 
@@ -57,10 +61,28 @@ export const syntheziserSemanticExtendedCall = async (state: any) => {
 };
 
 export const getSemanticExtendedResponse = async (state: any) => {
-  const uploads: ContentResult[] =
+  const uploads: DocumentContentResult[] =
     await prepareDocumentBySimilaritySearch(state);
 
   const topQueries = filterOutDuplicatesFromTopQueries(uploads);
 
   return topQueries;
+};
+
+export const getCodeAnalysisSemanticResponse = async (
+  state: any,
+  levelFrom: number,
+  levelTo: number = levelFrom,
+  numberOfResults: number,
+  scoreMultiplier: number,
+) => {
+  const uploads: CodeContentResult[] = await findObjectsBySimilaritySearch(
+    state,
+    levelFrom,
+    levelTo,
+    numberOfResults,
+    scoreMultiplier,
+  );
+
+  return uploads;
 };

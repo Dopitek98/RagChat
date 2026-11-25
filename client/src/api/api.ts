@@ -24,8 +24,20 @@ export async function getEmbedding(
   return response.json();
 }
 
-export type EmbeddingResponse = [string, string, string, (RetrievedContext[] | null)?, TokenUsage?];
-export type DevResponse = [string, string, string, RetrievedContext[] | null, TokenUsage];
+export type EmbeddingResponse = [
+  string,
+  string,
+  string,
+  (RetrievedContext[] | null)?,
+  TokenUsage?,
+];
+export type DevResponse = [
+  string,
+  string,
+  string,
+  RetrievedContext[] | null,
+  TokenUsage,
+];
 
 export async function getDevMessage(
   query: string,
@@ -33,6 +45,26 @@ export async function getDevMessage(
   threadId?: string,
 ): Promise<DevResponse> {
   const response = await fetch("http://localhost:5000/api/dev", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query, searchType, threadId }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function getCodeAnalystMessage(
+  query: string,
+  searchType: string,
+  threadId?: string,
+): Promise<DevResponse> {
+  const response = await fetch("http://localhost:5000/api/codeanalyst", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

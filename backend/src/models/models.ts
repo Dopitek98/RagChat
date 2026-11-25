@@ -3,25 +3,42 @@ import {
   AgentFinalOutput,
   ClassificationResultSchema,
   ClassificationAgentSchema,
+  CodeClassificationAgentSchema,
   queryExtenderOutput,
   investigationExtenderOutput,
   investigationSufficiencyOutput,
+  joernAgentAnswerSchema,
+  focusedJoernAssessmentSchema,
 } from "../schema/messagesSchema.js";
 import { ChatOpenRouter } from "@langchain/openrouter";
-import { createAgent } from "langchain";
-import { toolRead, wrappedTools } from "../tools/tools.js";
+import { createAgent, toolCallLimitMiddleware } from "langchain";
+import {
+  joernFindMethodsIncludingLiteralTool,
+  joernGetParentMethodContainingCallTool,
+  joernListClassMethodsTool,
+  joernListClassMethodsWithCallersTool,
+  toolRead,
+  joernToolRead,
+  wrappedTools,
+  joernFindMethodCallersDeepth5Tool,
+  joernDumpMethodCodeTool,
+} from "../tools/tools.js";
 import { investigationReportOutput } from "../schema/messagesSchema.js";
 import { softwareDeveloperAnalyzePrompt } from "../prompt/softwareDeveloperAnalyzePrompt.js";
 import { graphifyInvestigationAssistant } from "../prompt/graphifyInvestigationAssistant.js";
+import { joernAnalyzePrompt } from "../prompt/joernAnalyzePrompt.js";
+import { joernSoftwareDeveloperPrompt } from "../prompt/joernSoftwareDeveloperPrompt.js";
+import { joernReadOnlySoftwareDeveloperPrompt } from "../prompt/joernReadOnlySoftwareDeveloperPrompt.js";
 
-// const DEFAULT_MODEL = "gemma4:12b";
+// const DEFAULT_MODEL = "qwen3.8:latest";
 const DEFAULT_MODEL = "qwen3.5:9b";
 const DEFAULT_TEMPERATURE = 0;
 const DEFAULT_BASE_URL =
   process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
 const DEFAULT_DIMENSIONS = 1024;
 const DEFAULT_EMBEDDING_MODEL = "qwen3-embedding:latest";
-
+//const VERIFIED_PAY_MODEL = "openai/gpt-4o-mini";
+const VERIFIED_PAY_MODEL = "deepseek/deepseek-v4.1-flash";
 export const defaultStructuredModel = new ChatOllama({
   model: DEFAULT_MODEL,
   temperature: DEFAULT_TEMPERATURE,
@@ -40,6 +57,12 @@ export const defaultAgentClassifyModel = new ChatOllama({
   baseUrl: DEFAULT_BASE_URL,
 }).withStructuredOutput(ClassificationAgentSchema);
 
+export const defaultCodeAgentClassifyModel = new ChatOllama({
+  model: DEFAULT_MODEL,
+  temperature: DEFAULT_TEMPERATURE,
+  baseUrl: DEFAULT_BASE_URL,
+}).withStructuredOutput(CodeClassificationAgentSchema);
+
 export const defaultFinalOutputModel = new ChatOllama({
   model: DEFAULT_MODEL,
   temperature: DEFAULT_TEMPERATURE,
@@ -48,7 +71,7 @@ export const defaultFinalOutputModel = new ChatOllama({
 
 //api key set in env is needed
 export const defaultInvestigationChatModel = new ChatOpenRouter({
-  model: "openai/gpt-4o-mini",
+  model: VERIFIED_PAY_MODEL,
   temperature: 0,
 }).withStructuredOutput(investigationExtenderOutput);
 
@@ -86,7 +109,7 @@ export const defaultEmbeddingModel = new OllamaEmbeddings({
 // });
 
 export const defaultPaidChatModel = new ChatOpenRouter({
-  model: "openai/gpt-4o-mini",
+  model: VERIFIED_PAY_MODEL,
   temperature: 0,
 });
 
@@ -104,4 +127,45 @@ export const softwareDeveloperAnalystAgent = createAgent({
   tools: [toolRead],
   // responseFormat: investigationReportOutput,
   systemPrompt: softwareDeveloperAnalyzePrompt(),
+});
+
+export const joernAnalystAgent = createAgent({
+  model: defaultChatModel,
+  tools: [
+    joernListClassMethodsTool,
+    joernListClassMethodsWithCallersTool,
+    joernFindMethodCallersDeepth5Tool,
+    joernGetParentMethodContainingCallTool,
+    joernFindMethodsIncludingLiteralTool,
+  ],
+  systemPrompt: joernAnalyzePrompt(),
+  responseFormat: joernAgentAnswerSchema,
+});
+
+export const focusedJoernSoftwareDeveloperAgent = createAgent({
+  model: defaultPaidChatModel,
+  tools: [joernToolRead],
+  systemPrompt: joernReadOnlySoftwareDeveloperPrompt(),
+  responseFormat: focusedJoernAssessmentSchema,
+  middleware: [
+    toolCallLimitMiddleware({
+      toolName: "read_file",
+      runLimit: 7,
+      exitBehavior: "continue",
+    }),
+  ],
+});
+
+export const joernSoftwareDeveloperAgent = createAgent({
+  model: defaultChatModel,
+  tools: [joernDumpMethodCodeTool, joernToolRead],
+  systemPrompt: joernSoftwareDeveloperPrompt(),
+  responseFormat: joernAgentAnswerSchema,
+  middleware: [
+    toolCallLimitMiddleware({
+      toolName: "read_file",
+      runLimit: 7,
+      exitBehavior: "continue",
+    }),
+  ],
 });

@@ -1,27 +1,37 @@
-import type { ContentResult, Result } from "../types/types.js";
+import type {
+  DocumentContentResult,
+  CodeContentResult,
+  Result,
+} from "../types/types.js";
 import {
   client,
   extendGivenContext,
-  vectorStore,
+  documentVectorStore,
+  hierarchyVectorStore,
 } from "../mongo/mongoClientFactory.js";
 import winkNLP from "wink-nlp";
 import model from "wink-eng-lite-web-model";
 import bm25 from "wink-bm25-text-search";
 import { ObjectId } from "mongodb";
 
+export const DEFAULT_CLASS_LEVEL = 7;
+
 export const prepareDocumentBySimilaritySearch = async (state: any) => {
   await client.connect();
-  const uploads: ContentResult[] = [];
+  const uploads: DocumentContentResult[] = [];
   for (const query of state.searchQueries) {
-    const tempUploads: ContentResult[] = [];
-    const retrievedDocs = await vectorStore.similaritySearchWithScore(query, 4);
+    const tempUploads: DocumentContentResult[] = [];
+    const retrievedDocs = await documentVectorStore.similaritySearchWithScore(
+      query,
+      4,
+    );
 
     retrievedDocs.forEach(([doc, score]: [any, number]) => {
       tempUploads.push({
         content: {
           source: doc.metadata.source ?? "unknown",
           pageContent: doc.pageContent,
-          score: score,
+          score,
           fromLine: doc.metadata.loc.lines.from,
           toLine: doc.metadata.loc.lines.to,
         },
@@ -38,7 +48,52 @@ export const prepareDocumentBySimilaritySearch = async (state: any) => {
   return uploads;
 };
 
-export const filterOutDuplicatesFromTopQueries = (uploads: ContentResult[]) => {
+export const findObjectsBySimilaritySearch = async (
+  state: any,
+  levelFrom: number = DEFAULT_CLASS_LEVEL,
+  levelTo: number = levelFrom,
+  numberOfResults: number,
+  scoreMultiplier: number = 1,
+) => {
+  await client.connect();
+  const uploads: CodeContentResult[] = [];
+  const retrievedDocs = await hierarchyVectorStore.similaritySearchWithScore(
+    state.query,
+    numberOfResults,
+    {
+      preFilter: {
+        level: { $gte: levelFrom, $lte: levelTo },
+      },
+    },
+  );
+
+  retrievedDocs.forEach(([doc, score]: [any, number]) => {
+    console.log(
+      `Retrieved doc: ${doc.metadata.name}, Level: ${doc.metadata.level}, Score: ${score}`,
+    );
+    uploads.push({
+      content: {
+        id: doc.metadata._id,
+        level: doc.metadata.level,
+        keywords: doc.metadata.keywords ?? null,
+        score: score * scoreMultiplier,
+        name: doc.metadata.name,
+        parentName: doc.metadata.parentName ?? null,
+        child: doc.metadata.child ?? null,
+        description: doc.metadata.description ?? null,
+        type: doc.metadata.type ?? null,
+        relatedClasses: doc.metadata.relatedClasses ?? null,
+        source: doc.metadata.source ?? null,
+      },
+    });
+  });
+  await client.close();
+  return uploads.sort((a, b) => b.content.score - a.content.score);
+};
+
+export const filterOutDuplicatesFromTopQueries = (
+  uploads: DocumentContentResult[],
+) => {
   return uploads
     .filter(
       (item, index, self) =>

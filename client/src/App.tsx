@@ -3,12 +3,17 @@ import ContextTab from "./context/contextTab";
 import HistoryTab from "./history/historyTab";
 import NavBar from "./navbar/Navbar";
 import { useState, useEffect } from "react";
-import type { HistoryEntry, LlmResponse, SearchType } from "./types/types";
+import type {
+  CodeAnalysisType,
+  HistoryEntry,
+  LlmResponse,
+  SearchType,
+} from "./types/types";
 import { getHistory } from "./api/api";
 
 function App() {
   const [searchType, setSearchType] = useState<SearchType>("BM25");
-  const [codeAnalysis, setCodeAnalysis] = useState(false);
+  const [codeAnalysis, setCodeAnalysis] = useState<CodeAnalysisType>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [llmResponse, setLlmResponse] = useState<LlmResponse>([
     "",
